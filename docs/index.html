@@ -2015,7 +2015,7 @@ function banksBlock(){
 document.addEventListener('submit',e=>{ if(e.target.id==='bankForm2'){ e.preventDefault(); S.bankQ=$('#bankQ').value; $('#bankOut').innerHTML=bankResult(S.bankQ) } });
 
 /* ---------- v2.0: over-the-air updates (APK) + PWA updates (web) ---------- */
-const APP_VERSION='2.0.2';
+const APP_VERSION='2.0.3';
 const OTA_SITE='https://sheranr.github.io/trade-nova/';
 const OTA_PUBKEY='MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEoOsc1fryriZZEoUJ9+yAuoRnUoDZ0UuJWQeo9oLwe23P90J+rVGIQfqkyMlknHNpeUQH1g5tEd/Ieus5M9LlBA==';
 const IS_APK=location.protocol==='file:'&&!!window.Android;

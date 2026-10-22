@@ -27,6 +27,9 @@
     invoke-direct {v3, p0}, Llk/trademate/hs/Bridge;-><init>(Landroid/app/Activity;)V
     const-string v4, "Android"
     invoke-virtual {v0, v3, v4}, Landroid/webkit/WebView;->addJavascriptInterface(Ljava/lang/Object;Ljava/lang/String;)V
+    new-instance v3, Landroid/webkit/WebViewClient;
+    invoke-direct {v3}, Landroid/webkit/WebViewClient;-><init>()V
+    invoke-virtual {v0, v3}, Landroid/webkit/WebView;->setWebViewClient(Landroid/webkit/WebViewClient;)V
     const-string v4, "file:///android_asset/index.html"
     invoke-virtual {v0, v4}, Landroid/webkit/WebView;->loadUrl(Ljava/lang/String;)V
     invoke-virtual {p0, v0}, Llk/trademate/hs/MainActivity;->setContentView(Landroid/view/View;)V
