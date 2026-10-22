@@ -12,7 +12,8 @@ cp -r "$ROOT/android" "$W/app"
 A="$W/app/assets"; mkdir -p "$A"
 CODE=$(sed -n 's/.*versionCode: \([0-9]*\).*/\1/p' "$ROOT/android/apktool.yml")
 VER=$(python3 -c "import json;print(json.loads(json.load(open('$ROOT/docs/ota/version.json'))['payload'])['content'])")
-sed -e "s/__NATIVE_CODE__/$CODE/" -e "s/__APP_VERSION__/$VER/" "$ROOT/android/assets-src/boot.html" > "$A/index.html"
+BF=$(python3 -c "import hashlib,json;d='$ROOT/docs/';print(json.dumps({n:hashlib.sha256(open(d+n,'rb').read()).hexdigest() for n in ['index.html','hsdata.js','prices.js']},separators=(',',':')))")
+sed -e "s/__NATIVE_CODE__/$CODE/g" -e "s/__APP_VERSION__/$VER/" -e "s/__BUILTIN_FILES__/$BF/" "$ROOT/android/assets-src/boot.html" > "$A/index.html"
 rm -rf "$W/app/assets-src"
 cp "$ROOT/docs/index.html" "$A/app.html"
 cp "$ROOT/docs/hsdata.js" "$ROOT/docs/prices.js" "$A/"

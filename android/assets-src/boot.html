@@ -1,38 +1,57 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Trade Nova</title>
 <style>html,body{margin:0;height:100%;background:#0B2C6E;color:#fff;font:600 16px system-ui,Roboto,sans-serif}
-#s{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
-#s img{width:96px;height:96px;border-radius:22px;box-shadow:0 10px 30px rgba(0,0,0,.35)}#s small{color:#BFD2FF;font-weight:500}</style></head>
-<body><div id="s"><img src="icon.png" alt=""><div>Trade Nova</div><small>Smarter Trade. Greater Confidence</small></div>
+#s{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:0 24px;box-sizing:border-box}
+#s img{width:96px;height:96px;border-radius:22px;box-shadow:0 10px 30px rgba(0,0,0,.35)}#s small{color:#BFD2FF;font-weight:500}
+#st{font:500 12px system-ui,Roboto,sans-serif;color:#8FA9E6;min-height:16px}
+#fb{display:none;margin-top:8px;background:#fff;color:#0B2C6E;border:0;border-radius:12px;padding:12px 18px;font:700 15px system-ui,Roboto,sans-serif}</style></head>
+<body><div id="s"><img src="icon.png" alt=""><div>Trade Nova</div><small>Smarter Trade. Greater Confidence</small><div id="st">Starting…</div><button id="fb">Open Trade Nova</button></div>
 <script>
-/* Trade Nova bootloader — part of the installed app. Picks the newest verified app bundle:
-   the one downloaded by the updater (stored in IndexedDB) or the one built into this APK. */
+/* Trade Nova bootloader (part of the installed app, build __NATIVE_CODE__).
+   Opens the newest verified app version: an update downloaded by the updater (kept in IndexedDB,
+   split into small chunks) or the version built into this APK. Any problem -> built-in version. */
 (function(){
-var NATIVE=__NATIVE_CODE__, BUILTIN='__APP_VERSION__';
+var NATIVE=__NATIVE_CODE__, BUILTIN='__APP_VERSION__', BUILTIN_FILES=__BUILTIN_FILES__;
+var done=false, st=document.getElementById('st'), fb=document.getElementById('fb');
+function say(t){ st.textContent=t; }
 function vcmp(a,b){a=String(a).split('.').map(Number);b=String(b).split('.').map(Number);for(var i=0;i<Math.max(a.length,b.length);i++){var d=(a[i]||0)-(b[i]||0);if(d)return d>0?1:-1}return 0}
 function ls(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
-function builtin(){ ls('tn-running',BUILTIN); location.replace('app.html'); }
-function run(b){
-  var h=b.files['index.html'];
-  var O='<scr'+'ipt', C='</scr'+'ipt>';
-  ['hsdata.js','prices.js'].forEach(function(n){ if(b.files[n]) h=h.split(O+' src="'+n+'">'+C).join(O+'>'+b.files[n].replace(/<\/(script)/gi,'<\\/$1')+C); });
-  ls('tn-running',b.content); ls('tn-boot-pending',b.content);
-  document.open(); document.write(h); document.close();
+function builtin(why){ if(done)return; done=true; if(why) ls('tn-boot-note',why); ls('tn-running',BUILTIN); say('Opening…'); location.replace('app.html'); }
+fb.onclick=function(){ done=false; builtin('manual'); };
+setTimeout(function(){ if(!done){ fb.style.display='inline-block'; say('Taking longer than usual…'); } },6000);
+setTimeout(function(){ if(!done) builtin('timeout'); },12000);
+ls('tn-native',NATIVE); ls('tn-builtin',BUILTIN_FILES);
+function run(meta,files){
+  if(done)return; done=true;
+  var h=files['index.html']; var O='<scr'+'ipt', C='</scr'+'ipt>';
+  ['hsdata.js','prices.js'].forEach(function(n){ if(files[n]) h=h.split(O+' src="'+n+'">'+C).join(O+'>'+files[n].replace(/<\/(script)/gi,'<\\/$1')+C); });
+  ls('tn-running',meta.content); ls('tn-boot-pending',meta.content); say('Opening update '+meta.content+'…');
+  setTimeout(function(){ document.open(); document.write(h); document.close(); },30);
 }
-ls('tn-native',NATIVE);
 try{
-  var r=indexedDB.open('tn-ota',1);
-  r.onupgradeneeded=function(){ r.result.createObjectStore('b') };
-  r.onerror=builtin;
+  say('Checking for updates on this phone…');
+  var r=indexedDB.open('tn-ota2',1);
+  r.onupgradeneeded=function(){ r.result.createObjectStore('c') };
+  r.onerror=function(){ builtin('idb-open'); };
   r.onsuccess=function(){
-    var g=r.result.transaction('b').objectStore('b').get('bundle');
-    g.onerror=builtin;
+    var db=r.result, tx; try{ tx=db.transaction('c'); }catch(e){ return builtin('idb-tx'); }
+    var os=tx.objectStore('c'), g=os.get('meta');
+    g.onerror=function(){ builtin('idb-meta'); };
     g.onsuccess=function(){
-      var b=g.result, bad=ls('tn-bad');
-      if(ls('tn-boot-pending')&&b&&ls('tn-boot-pending')===b.content){ ls('tn-bad',b.content); localStorage.removeItem('tn-boot-pending'); return builtin(); }  /* last start of this update failed */
-      if(b&&b.files&&b.files['index.html']&&vcmp(b.content,BUILTIN)>0&&(b.minNative||0)<=NATIVE&&bad!==b.content) run(b); else builtin();
+      var m=g.result, bad=ls('tn-bad'), pend=ls('tn-boot-pending');
+      if(!m||!m.files||!m.files['index.html']) return builtin();
+      if(pend&&pend===m.content){ ls('tn-bad',m.content); localStorage.removeItem('tn-boot-pending'); return builtin('rolled-back'); }
+      if(!(vcmp(m.content,BUILTIN)>0)||(m.minNative||0)>NATIVE||bad===m.content) return builtin();
+      var names=Object.keys(m.files), files={}, left=0;
+      say('Loading update '+m.content+'…');
+      names.forEach(function(n){ var k=m.files[n].chunks; files[n]=new Array(k); left+=k;
+        for(var i=0;i<k;i++)(function(i){ var q=os.get('f:'+n+':'+i);
+          q.onerror=function(){ builtin('idb-chunk'); };
+          q.onsuccess=function(){ if(typeof q.result!=='string') return builtin('idb-missing'); files[n][i]=q.result; if(--left===0){ names.forEach(function(x){ files[x]=files[x].join('') }); run(m,files); } };
+        })(i);
+      });
     };
   };
-}catch(e){ builtin(); }
+}catch(e){ builtin('idb-error'); }
 })();
 </script></body></html>

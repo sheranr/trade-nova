@@ -2015,7 +2015,7 @@ function banksBlock(){
 document.addEventListener('submit',e=>{ if(e.target.id==='bankForm2'){ e.preventDefault(); S.bankQ=$('#bankQ').value; $('#bankOut').innerHTML=bankResult(S.bankQ) } });
 
 /* ---------- v2.0: over-the-air updates (APK) + PWA updates (web) ---------- */
-const APP_VERSION='2.0.1';
+const APP_VERSION='2.0.2';
 const OTA_SITE='https://sheranr.github.io/trade-nova/';
 const OTA_PUBKEY='MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEoOsc1fryriZZEoUJ9+yAuoRnUoDZ0UuJWQeo9oLwe23P90J+rVGIQfqkyMlknHNpeUQH1g5tEd/Ieus5M9LlBA==';
 const IS_APK=location.protocol==='file:'&&!!window.Android;
@@ -2029,8 +2029,15 @@ async function verifySig(payload,sig){
   const key=await crypto.subtle.importKey('spki',b64u8(OTA_PUBKEY),{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
   return crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},key,b64u8(sig),new TextEncoder().encode(payload));
 }
-function idb(){ return new Promise((res,rej)=>{ const r=indexedDB.open('tn-ota',1); r.onupgradeneeded=()=>r.result.createObjectStore('b'); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error) }) }
-async function idbPut(k,v){ const db=await idb(); return new Promise((res,rej)=>{ const t=db.transaction('b','readwrite'); t.objectStore('b').put(v,k); t.oncomplete=res; t.onerror=()=>rej(t.error) }) }
+function idb(){ return new Promise((res,rej)=>{ const r=indexedDB.open('tn-ota2',1); r.onupgradeneeded=()=>r.result.createObjectStore('c'); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error) }) }
+const OTA_CHUNK=40000;   // small values: some phones fail to read large IndexedDB values
+async function saveBundle(meta,files){
+  const db=await idb(); const m={...meta,files:{}};
+  await new Promise((res,rej)=>{ const t=db.transaction('c','readwrite'); const os=t.objectStore('c'); os.clear();
+    for(const [n,txt] of Object.entries(files)){ const k=Math.max(1,Math.ceil(txt.length/OTA_CHUNK)); m.files[n]={chunks:k,sha256:meta.sha[n]}; for(let i=0;i<k;i++) os.put(txt.slice(i*OTA_CHUNK,(i+1)*OTA_CHUNK),'f:'+n+':'+i) }
+    delete m.sha; os.put(m,'meta'); t.oncomplete=res; t.onerror=()=>rej(t.error); t.onabort=()=>rej(t.error) });
+}
+function builtinFiles(){ try{ return JSON.parse(localStorage.getItem('tn-builtin'))||{} }catch(e){ return {} } }
 function otaBanner(){
   let el=$('#otaBar'); if(!el){ el=document.createElement('div'); el.id='otaBar'; el.className='otabar'; document.body.appendChild(el) }
   if(OTA.apk) el.innerHTML=`<span>${ic('upload')}<b>New app version ${esc(OTA.apk.version)}</b> ${OTA.apk.required?'— required to keep receiving updates':'is available'}</span><button class="btn sm" data-otaapk>Download</button><button class="x" data-otaclose aria-label="Later">${ic('x')}</button>`;
@@ -2048,13 +2055,15 @@ async function otaCheck(manual){
     try{ localStorage.setItem('tn-ota-last',JSON.stringify(Date.now())) }catch(e){}
     if(m.apk&&m.apk.code>nat){ OTA.apk={...m.apk,required:(m.minNative||0)>nat}; otaBanner() }
     if((m.minNative||0)<=nat&&vcmp(m.content,cur)>0){
-      const files={};
+      const files={}, sha={}, bi=builtinFiles();
       for(const [name,f] of Object.entries(m.files)){
+        if(bi[name]===f.sha256) continue;              // same as the copy built into the app: nothing to download
         const t=await (await fetch(OTA_SITE+name+'?v='+f.sha256.slice(0,12),{cache:'no-store'})).text();
         if(await sha256hex(t)!==f.sha256) throw new Error('hash '+name);
-        files[name]=t;
+        files[name]=t; sha[name]=f.sha256;
       }
-      await idbPut('bundle',{content:m.content,minNative:m.minNative||0,files,notes:m.notes||'',at:Date.now()});
+      if(!files['index.html']) throw new Error('bundle');
+      await saveBundle({content:m.content,minNative:m.minNative||0,notes:m.notes||'',at:Date.now(),sha},files);
       OTA.ready=m.content; OTA.notes=m.notes; otaBanner();
     } else if(manual&&!OTA.apk) toast('You have the latest version ('+cur+')');
     OTA.state='';

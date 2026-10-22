@@ -1,5 +1,5 @@
 /* Trade Nova service worker — makes the web app work offline and updates it in the background. */
-const VERSION='2.0.1';
+const VERSION='2.0.2';
 const CORE='tn-core-'+VERSION, PDFS='tn-pdf-v1';
 const ASSETS=['./','index.html','hsdata.js','prices.js','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/favicon-32.png','pdf/pdf.js','pdf/pdf.worker.js'];
 self.addEventListener('install',e=>{ e.waitUntil(caches.open(CORE).then(c=>c.addAll(ASSETS.map(u=>new Request(u,{cache:'reload'}))))) });
