@@ -8,7 +8,7 @@ self.addEventListener('message',e=>{ if(e.data==='skip') self.skipWaiting() });
 self.addEventListener('fetch',e=>{
   const u=new URL(e.request.url);
   if(e.request.method!=='GET'||u.origin!==location.origin) return;
-  if(u.pathname.includes('/ota/')||u.pathname.includes('/download/')) return;            // always from the network
+  if(u.pathname.includes('/ota/')||u.pathname.includes('/download/')||u.pathname.includes('/content/')||u.pathname.includes('/admin/')) return;            // always from the network
   if(e.request.mode==='navigate'){ e.respondWith(caches.match('index.html').then(r=>r||fetch(e.request))); return }
   if(u.pathname.includes('/pdf/')&&u.pathname.endsWith('.pdf')){                          // documents: cache after first view
     e.respondWith(caches.open(PDFS).then(c=>c.match(e.request).then(r=>r||fetch(e.request).then(n=>{ if(n.ok) c.put(e.request,n.clone()); return n })))); return }

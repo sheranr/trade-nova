@@ -1302,7 +1302,7 @@ async function ask(q){
 /* learn */
 function vLearn(){
   return `<section><div class="eyebrow">Learning academy · quick reference</div><h1 style="font-size:22px;margin-top:4px">Learn</h1></section>
-  <section class="stack"><div class="sec-h"><h2>Training videos</h2><span class="small muted">${S.videos.length} on Google Drive</span></div><div class="vgrid">${S.videos.map(vCard).join('')}</div><div class="note">Videos open in Google Drive, so you need internet and a Google account with access. New videos added in the online app appear here in the next offline version.</div></section>
+  <section class="stack"><div class="sec-h"><h2>Training videos</h2><span class="small muted">${S.videos.length} on Google Drive</span></div><div class="vgrid">${S.videos.map(vCard).join('')}</div><div class="note">Videos open in Google Drive or YouTube, so you need internet and, for Drive, a Google account with access. The video list is kept up to date by the Trade Nova admin and refreshes whenever the app is opened online.</div></section>
   <button class="tile feature" data-go="english" style="width:100%"><span class="ic">${ic('mic')}</span><span style="display:flex;flex-direction:column;gap:2px;min-width:0"><b>English Articulation</b><span>Pronunciation and professional phrases for customer conversations.</span></span></button>
   <section class="card"><div class="sec-h" style="margin-bottom:6px"><h2>UCP 600 quick cards</h2><span class="tag">ICC 2007</span></div>${UCP.map(([a,t])=>`<div class="ucp"><span class="tag">${a}</span><span class="small">${esc(t)}</span></div>`).join('')}</section>
   <section class="card"><div class="sec-h" style="margin-bottom:6px"><h2>Glossary</h2></div>${GLOSS.map(([a,t])=>`<div class="ucp"><span class="tag">${a}</span><span class="small">${esc(t)}</span></div>`).join('')}</section>
@@ -2301,6 +2301,27 @@ document.addEventListener('submit',e=>{ if(e.target.id==='bankForm2'){ e.prevent
 /* ---------- v2.0: over-the-air updates (APK) + PWA updates (web) ---------- */
 const APP_VERSION='__APP_VERSION__';
 const OTA_SITE='https://sheranr.github.io/trade-nova/';
+/* ---------- live content (videos + notices) managed from the admin page, docs/admin ----------
+   Fetched when online, kept on the phone for offline use. Only plain text and https links are accepted. */
+const LIVE={
+  clean(j){
+    const str=(v,n)=>String(v==null?'':v).slice(0,n), url=u=>/^https:\/\/[^\s"'<>]+$/.test(String(u||''))?String(u):'';
+    if(!j||typeof j!=='object'||!Array.isArray(j.videos)||!Array.isArray(j.notices)) return null;
+    const videos=j.videos.map((v,i)=>({id:str(v.id,40)||'v'+i,title:str(v.title,140),cat:str(v.cat,40),desc:str(v.desc,400),dur:str(v.dur,12),url:url(v.url),
+      kind:/youtu\.?be/.test(v.url||'')?'youtube':/drive\.google/.test(v.url||'')?'drive':'link',order:i})).filter(v=>v.title&&v.url).slice(0,200);
+    const notices=j.notices.map((n,i)=>({id:str(n.id,40)||'n'+i,date:str(n.date,10),level:['critical','warn','info'].includes(n.level)?n.level:'info',
+      title:str(n.title,160),body:str(n.body,1200),tag:str(n.tag,30),codes:str(n.codes,200),url:url(n.url)})).filter(n=>n.title).slice(0,100);
+    return {videos,notices,updated:str(j.updated,40)};
+  },
+  apply(c){ if(!c) return; S.videos=c.videos; S.updates=c.notices; S.liveAt=c.updated; },
+  async refresh(){
+    try{ const r=await fetch(OTA_SITE+'content/live.json?t='+Date.now(),{cache:'no-store'}); if(!r.ok) return;
+      const c=LIVE.clean(await r.json()); if(!c) return; LS.set('live',c); LIVE.apply(c); render(); }catch(e){}
+  }
+};
+LIVE.apply(LIVE.clean(LS.get('live',null)));
+if(navigator.onLine!==false) setTimeout(LIVE.refresh,1200);
+window.addEventListener('online',()=>LIVE.refresh());
 const OTA_PUBKEY='MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEoOsc1fryriZZEoUJ9+yAuoRnUoDZ0UuJWQeo9oLwe23P90J+rVGIQfqkyMlknHNpeUQH1g5tEd/Ieus5M9LlBA==';
 const IS_APK=location.protocol==='file:'&&!!window.Android;
 const OTA={state:'',msg:'',ready:null,apk:null};

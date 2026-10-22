@@ -1,0 +1,180 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Trade Nova Admin</title><link rel="icon" href="../icons/favicon-32.png">
+<style>
+:root{--bg:#061426;--bg2:#0B2038;--card:#112B46;--line:#1F3B5E;--ink:#F5F8FF;--mut:#A7BED4;--blue:#168BFF;--gold:#F3BA55;--ok:#12C996;--warn:#FFB547;--bad:#F25B65;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(900px 400px at 50% -160px,#0E2C50,transparent 70%) no-repeat,var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(243,186,85,.18);background:rgba(6,20,38,.92);position:sticky;top:0;z-index:5}
+header img{width:36px;height:36px;border-radius:10px;box-shadow:0 0 0 1px rgba(243,186,85,.35)}
+header b{font-size:18px;letter-spacing:-.02em}header b span{color:var(--gold)}header small{display:block;color:var(--mut);font-size:12px}
+header .sp{flex:1}
+main{max-width:760px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+h1{font-size:22px;margin:0;letter-spacing:-.02em}h2{font-size:17px;margin:0}
+.mut{color:var(--mut)}.small{font-size:13px}
+label{font-size:13px;font-weight:600;color:var(--mut);display:flex;flex-direction:column;gap:5px}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:10px 12px;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(22,139,255,.22)}
+textarea{min-height:80px;resize:vertical}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:11px;padding:10px 15px;font:700 14px inherit;font-family:inherit;cursor:pointer;color:#fff;background:linear-gradient(180deg,#2B98FF,#168BFF 55%,#0E78E6);text-decoration:none}
+.btn.line{background:transparent;border:1px solid var(--line);color:var(--ink)}.btn.sm{padding:6px 10px;font-size:13px;border-radius:9px}
+.btn.danger{background:rgba(242,91,101,.15);color:var(--bad)}.btn.gold{background:linear-gradient(180deg,#FFE3A6,#F3BA55);color:#2A1A00}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:560px){.grid2{grid-template-columns:1fr}}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.tabs button{border:0;background:transparent;color:var(--mut);font:700 14px inherit;font-family:inherit;padding:9px;border-radius:9px;cursor:pointer}
+.tabs button[aria-pressed=true]{background:var(--card);color:var(--ink);box-shadow:0 4px 12px -6px #000}
+.item{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}.item:first-of-type{border-top:0}
+.item .grow{flex:1;min-width:0}.item b{display:block}.item .u{font-size:12px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{display:inline-block;font-size:11px;font-weight:700;border-radius:99px;padding:2px 8px;background:rgba(22,139,255,.14);color:#7FB8FF}
+.pill.warn{background:rgba(255,181,71,.15);color:var(--warn)}.pill.critical{background:rgba(242,91,101,.15);color:var(--bad)}
+.bar{position:sticky;bottom:0;background:rgba(6,20,38,.95);border-top:1px solid rgba(243,186,85,.25);padding:12px 16px;display:flex;gap:10px;align-items:center;justify-content:center}
+.msg{border-radius:12px;padding:10px 12px;font-size:13.5px}.msg.ok{background:rgba(18,201,150,.12);color:var(--ok)}.msg.bad{background:rgba(242,91,101,.12);color:var(--bad)}.msg.warn{background:rgba(255,181,71,.12);color:var(--warn)}
+.empty{text-align:center;color:var(--mut);padding:18px;border:1.5px dashed var(--line);border-radius:12px}
+ol{margin:0;padding-left:20px}li{margin:3px 0}
+a{color:#7FB8FF}
+[hidden]{display:none!important}
+</style></head><body>
+<header><img src="../icon.png" alt=""><div><b>Trade <span>Nova</span> Admin</b><small>Videos and notices for every user</small></div><span class="sp"></span><button class="btn sm line" id="out" hidden>Sign out</button></header>
+
+<main id="login">
+ <div class="card"><h1>Sign in</h1>
+  <div class="mut small">Only the owner of the Trade Nova GitHub repository can change the app. Paste your GitHub access token to continue. It never goes into the app and is not sent anywhere except GitHub.</div>
+  <label>GitHub access token<input id="tok" type="password" autocomplete="off" placeholder="github_pat_…"></label>
+  <label style="flex-direction:row;align-items:center;gap:8px;font-weight:500"><input id="rem" type="checkbox" style="width:auto"> Remember on this computer / phone</label>
+  <div class="row"><button class="btn" id="go">Sign in</button></div>
+  <div id="lmsg"></div>
+ </div>
+ <div class="card"><h2>First time: create your token (once)</h2>
+  <ol class="small mut">
+   <li>On GitHub, open <b>Settings → Developer settings → Personal access tokens → Fine-grained tokens</b> → <b>Generate new token</b>.</li>
+   <li>Name: <b>Trade Nova admin</b>. Expiration: up to 1 year.</li>
+   <li>Repository access: <b>Only select repositories</b> → <b>sheranr/trade-nova</b>.</li>
+   <li>Permissions → Repository permissions → <b>Contents: Read and write</b>. Nothing else.</li>
+   <li>Generate, copy the token and paste it above. Keep it private, like a password.</li>
+  </ol>
+  <a class="btn sm line" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" style="align-self:flex-start">Open GitHub token page</a>
+ </div>
+</main>
+
+<main id="app" hidden>
+ <div class="tabs"><button data-tab="videos" aria-pressed="true">Training videos</button><button data-tab="notices" aria-pressed="false">Notices / alerts</button></div>
+ <div id="pane"></div>
+ <div class="card small mut"><div>Every change you publish is saved as a dated entry in GitHub, so there is a full history of who changed what and when: <a id="hist" target="_blank" rel="noopener" href="https://github.com/sheranr/trade-nova/commits/main/docs/content/live.json">view change history</a>. Phones and the web app pick up changes the next time they open with internet (allow about 2 minutes after publishing).</div></div>
+</main>
+<div class="bar" id="bar" hidden><span id="dirty" class="small mut">No unpublished changes</span><button class="btn gold" id="pub" disabled>Publish to all users</button></div>
+
+<script>
+(function(){
+const REPO='sheranr/trade-nova', PATH='docs/content/live.json', API='https://api.github.com/repos/'+REPO+'/contents/'+PATH;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let TOKEN='', SHA='', DATA=null, DIRTY=false, TAB='videos', EDIT=null;
+const store={get(){try{return localStorage.getItem('tn-admin-tok')||sessionStorage.getItem('tn-admin-tok')||''}catch(e){return ''}},
+  set(t,rem){try{(rem?localStorage:sessionStorage).setItem('tn-admin-tok',t)}catch(e){}},clear(){try{localStorage.removeItem('tn-admin-tok');sessionStorage.removeItem('tn-admin-tok')}catch(e){}}};
+const b64d=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\s/g,'')),c=>c.charCodeAt(0)));
+const b64e=s=>{const u=new TextEncoder().encode(s);let x='';for(let i=0;i<u.length;i+=0x8000)x+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(x)};
+const gh=(url,opt={})=>fetch(url,{...opt,headers:{'Authorization':'Bearer '+TOKEN,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...(opt.headers||{})}});
+const isUrl=u=>/^https:\/\/[^\s"'<>]+$/.test(u||'');
+const kind=u=>/youtu\.?be/.test(u)?'YouTube':/drive\.google/.test(u)?'Google Drive':'Link';
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+async function load(){
+  const r=await gh(API+'?ref=main&t='+Date.now());
+  if(r.status===401) throw new Error('This token is not valid or has expired.');
+  if(r.status===403||r.status===404) throw new Error('This token cannot read the Trade Nova repository. Check it has access to sheranr/trade-nova with Contents: Read and write.');
+  if(!r.ok) throw new Error('GitHub error '+r.status);
+  const j=await r.json(); SHA=j.sha; DATA=JSON.parse(b64d(j.content));
+  DATA.videos=DATA.videos||[]; DATA.notices=DATA.notices||[];
+}
+async function signin(t,rem){
+  TOKEN=t.trim(); const m=$('#lmsg'); m.innerHTML='<div class="msg warn">Checking…</div>';
+  try{ await load(); store.set(TOKEN,rem); $('#login').hidden=true; $('#app').hidden=false; $('#bar').hidden=false; $('#out').hidden=false; setDirty(false); draw(); m.innerHTML='' }
+  catch(e){ TOKEN=''; m.innerHTML='<div class="msg bad">'+esc(e.message)+'</div>' }
+}
+function setDirty(d){ DIRTY=d; $('#pub').disabled=!d; $('#dirty').textContent=d?'You have unpublished changes':'No unpublished changes'; $('#dirty').style.color=d?'var(--warn)':'' }
+window.addEventListener('beforeunload',e=>{ if(DIRTY){ e.preventDefault(); e.returnValue='' } });
+
+function draw(){
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tab===TAB));
+  $('#pane').innerHTML=TAB==='videos'?videos():notices();
+}
+function videos(){
+  const L=DATA.videos, e=EDIT&&EDIT.t==='v'?EDIT:null, v=e?L[e.i]||{}:{};
+  const cats=[...new Set(['Imports','Exports','Compliance','Trade finance','Other',...L.map(x=>x.cat).filter(Boolean)])];
+  return `<div class="card"><div class="row" style="justify-content:space-between"><h2>Training videos (${L.length})</h2><span class="small mut">Shown in this order on the Learn page</span></div>
+   ${L.length?L.map((x,i)=>`<div class="item"><div class="grow"><b>${esc(x.title)}</b><span class="pill">${esc(x.cat||'Other')}</span> <span class="small mut">${kind(x.url)}${x.dur?' · '+esc(x.dur):''}</span><div class="u">${esc(x.url)}</div></div>
+     <div class="row" style="flex-wrap:nowrap"><button class="btn sm line" data-up="v:${i}" ${i?'':'disabled'} aria-label="Move up">↑</button><button class="btn sm line" data-dn="v:${i}" ${i<L.length-1?'':'disabled'} aria-label="Move down">↓</button><button class="btn sm line" data-ed="v:${i}">Edit</button><button class="btn sm danger" data-del="v:${i}">Remove</button></div></div>`).join(''):'<div class="empty">No videos yet</div>'}
+  </div>
+  <form class="card" id="vform"><h2>${e?'Edit video':'Add a video'}</h2>
+   <label>Title *<input id="vT" required maxlength="140" value="${esc(v.title||'')}" placeholder="e.g. Import LC — step by step"></label>
+   <div class="grid2"><label>Category<input id="vC" list="cats" maxlength="40" value="${esc(v.cat||'')}" placeholder="e.g. Imports"><datalist id="cats">${cats.map(c=>`<option value="${esc(c)}">`).join('')}</datalist></label>
+   <label>Duration (optional)<input id="vD" maxlength="12" value="${esc(v.dur||'')}" placeholder="e.g. 12:30"></label></div>
+   <label>Video link *<input id="vU" required value="${esc(v.url||'')}" placeholder="https://drive.google.com/file/d/… or https://youtu.be/…"></label>
+   <label>Short description (optional)<textarea id="vS" maxlength="400">${esc(v.desc||'')}</textarea></label>
+   <div class="small mut">Upload the video to <b>Google Drive</b> (Share → General access → <b>Anyone with the link</b>, or your organisation only) or to <b>YouTube</b> as <b>Unlisted</b>, then paste the link here.</div>
+   <div id="vmsg"></div>
+   <div class="row"><button class="btn">${e?'Save changes':'Add video'}</button>${e?'<button type="button" class="btn line" data-cancel>Cancel</button>':''}</div></form>`;
+}
+function notices(){
+  const L=DATA.notices, e=EDIT&&EDIT.t==='n'?EDIT:null, n=e?L[e.i]||{}:{};
+  const lv={info:'Update',warn:'Important',critical:'Critical'};
+  return `<div class="card"><div class="row" style="justify-content:space-between"><h2>Notices (${L.length})</h2><span class="small mut">Shown on the Alerts page with a red badge for new ones</span></div>
+   ${L.length?L.map((x,i)=>`<div class="item"><div class="grow"><b>${esc(x.title)}</b><span class="pill ${esc(x.level)}">${lv[x.level]||'Update'}</span> <span class="small mut">${esc(x.date)}${x.codes?' · HS '+esc(x.codes):''}</span><div class="small mut" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.body)}</div></div>
+     <div class="row" style="flex-wrap:nowrap"><button class="btn sm line" data-ed="n:${i}">Edit</button><button class="btn sm danger" data-del="n:${i}">Remove</button></div></div>`).join(''):'<div class="empty">No notices posted. The app’s built-in alerts still show.</div>'}
+  </div>
+  <form class="card" id="nform"><h2>${e?'Edit notice':'Post a notice'}</h2>
+   <label>Title *<input id="nT" required maxlength="160" value="${esc(n.title||'')}" placeholder="e.g. New ICL gazette for used tyres"></label>
+   <div class="grid2"><label>Date<input id="nD" type="date" value="${esc(n.date||new Date().toISOString().slice(0,10))}"></label>
+   <label>Level<select id="nL">${Object.entries(lv).map(([k,l])=>`<option value="${k}" ${n.level===k?'selected':''}>${l}</option>`).join('')}</select></label></div>
+   <label>Message<textarea id="nB" maxlength="1200">${esc(n.body||'')}</textarea></label>
+   <div class="grid2"><label>Related HS codes (optional)<input id="nC" maxlength="200" value="${esc(n.codes||'')}" placeholder="e.g. 4012.20, 8415"></label>
+   <label>Label (optional)<input id="nG" maxlength="30" value="${esc(n.tag||'')}" placeholder="e.g. Gazette 2496/38"></label></div>
+   <label>Link to the source (optional)<input id="nU" value="${esc(n.url||'')}" placeholder="https://…"></label>
+   <div class="small mut">Users who watch a related HS code see the notice flagged for them.</div>
+   <div id="nmsg"></div>
+   <div class="row"><button class="btn">${e?'Save changes':'Add notice'}</button>${e?'<button type="button" class="btn line" data-cancel>Cancel</button>':''}</div></form>`;
+}
+document.addEventListener('submit',ev=>{
+  ev.preventDefault(); const f=ev.target;
+  if(f.id==='vform'){
+    const u=$('#vU').value.trim(); if(!isUrl(u)){ $('#vmsg').innerHTML='<div class="msg bad">The link must start with https://</div>'; return }
+    const o={id:(EDIT&&DATA.videos[EDIT.i]&&DATA.videos[EDIT.i].id)||uid(),title:$('#vT').value.trim(),cat:$('#vC').value.trim(),url:u,desc:$('#vS').value.trim(),dur:$('#vD').value.trim()};
+    if(EDIT&&EDIT.t==='v') DATA.videos[EDIT.i]=o; else DATA.videos.push(o);
+  }
+  if(f.id==='nform'){
+    const u=$('#nU').value.trim(); if(u&&!isUrl(u)){ $('#nmsg').innerHTML='<div class="msg bad">The link must start with https://</div>'; return }
+    const o={id:(EDIT&&DATA.notices[EDIT.i]&&DATA.notices[EDIT.i].id)||uid(),date:$('#nD').value,level:$('#nL').value,title:$('#nT').value.trim(),body:$('#nB').value.trim(),codes:$('#nC').value.trim(),tag:$('#nG').value.trim(),url:u};
+    if(EDIT&&EDIT.t==='n') DATA.notices[EDIT.i]=o; else DATA.notices.unshift(o);
+    DATA.notices.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  }
+  EDIT=null; setDirty(true); draw();
+});
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(b.id==='go') return signin($('#tok').value,$('#rem').checked);
+  if(b.id==='out'){ if(DIRTY&&!confirm('Discard unpublished changes?')) return; store.clear(); location.reload(); return }
+  if(b.id==='pub') return publish();
+  if(d.tab){ TAB=d.tab; EDIT=null; return draw() }
+  if(d.cancel!==undefined){ EDIT=null; return draw() }
+  const pick=s=>{const [t,i]=s.split(':');return {t,i:+i,L:t==='v'?DATA.videos:DATA.notices}};
+  if(d.ed){ const p=pick(d.ed); EDIT={t:p.t,i:p.i}; draw(); const f=document.querySelector('form.card'); f&&f.scrollIntoView({behavior:'smooth'}); return }
+  if(d.del){ const p=pick(d.del); if(!confirm('Remove “'+p.L[p.i].title+'”? It disappears from the app after you publish.')) return; p.L.splice(p.i,1); EDIT=null; setDirty(true); return draw() }
+  if(d.up||d.dn){ const p=pick(d.up||d.dn), j=p.i+(d.up?-1:1); [p.L[p.i],p.L[j]]=[p.L[j],p.L[p.i]]; setDirty(true); return draw() }
+});
+async function publish(){
+  const btn=$('#pub'); btn.disabled=true; btn.textContent='Publishing…';
+  DATA.version=1; DATA.updated=new Date().toISOString();
+  const body={message:'Admin: update videos/notices ('+DATA.videos.length+' videos, '+DATA.notices.length+' notices)',content:b64e(JSON.stringify(DATA,null,1)+'\n'),sha:SHA,branch:'main'};
+  try{
+    const r=await gh(API,{method:'PUT',body:JSON.stringify(body)});
+    if(r.status===409||r.status===422){ alert('The content was changed somewhere else since you opened this page. It will reload — please make your change again.'); await load(); setDirty(false); draw(); return }
+    if(r.status===403||r.status===404) throw new Error('This token cannot write to the repository. Give it Contents: Read and write.');
+    if(!r.ok) throw new Error('GitHub error '+r.status);
+    const j=await r.json(); SHA=j.content.sha; setDirty(false);
+    $('#dirty').textContent='Published ✓ — users get it within about 2 minutes when online'; $('#dirty').style.color='var(--ok)';
+  }catch(e){ alert('Not published: '+e.message); setDirty(true) }
+  finally{ btn.textContent='Publish to all users'; btn.disabled=!DIRTY }
+}
+const t=store.get(); if(t) signin(t,true);
+})();
+</script></body></html>
