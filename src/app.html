@@ -359,6 +359,7 @@ details.acc .in{padding:0 16px 16px;display:flex;flex-direction:column;gap:14px;
 .person b{font-family:var(--f-display);font-size:15px}
 .contact{display:flex;gap:6px;flex-wrap:wrap;grid-column:2}
 .cbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--ground);border-radius:9px;padding:5px 9px;font-size:12.5px;cursor:pointer;color:var(--ink);max-width:100%;overflow-wrap:anywhere;text-align:left}
+a.cbtn{text-decoration:none}
 .cbtn svg{width:14px;height:14px;color:var(--muted);flex:none}
 /* english */
 .word{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-bottom:1px solid var(--line)}
@@ -547,7 +548,7 @@ const S = {
  data:null, rows:[], loading:true,
  db:null, user:null, uid:null, canEdit:false, assets:null, sample:null,
  settings:{brand:'Trade Nova',tagline:'Smarter Trade. Greater Confidence',org:''},
- videos:[{"id":"k59050z0wm6hauyfsv9z","title":"Cyber Security - Chain of Custody","cat":"Compliance","kind":"drive","order":2,"created":1792352484017,"desc":"","dur":"","url":"https://drive.google.com/file/d/1P0kB1VPAgrG-2G3cDSAg71V_o6VORdce/view?usp=drive_link"},{"id":"mc275b6ggmt7suyag7xl","title":"Cyber security - Empty Chair","cat":"Compliance","kind":"drive","order":3,"created":1792352545602,"desc":"","dur":"","url":"https://drive.google.com/file/d/1Hm-USwBCjPZFsRzBeZNR8wnBIo8NDBw8/view?usp=drive_link"},{"id":"914etp1ms123jesx5t1h","title":"Imports","cat":"Imports","kind":"drive","order":4,"created":1792352601815,"desc":"","dur":"","url":"https://drive.google.com/file/d/1_Pbf-KpKy_ACeDmmEu_iAbVVCJF0P5tI/view?usp=drive_link"},{"id":"q3g2amudfndze3utvnv4","title":"Cyber security - One Click","cat":"Compliance","kind":"drive","order":null,"created":1792352409948,"desc":"","dur":"","url":"https://drive.google.com/file/d/1z11rILkAHI8s42ZMENtP_HrI4EPg3oiG/view?usp=drive_link"},{"id":"jzgcgvsijhy01j6mk5ct","title":"Trade Finance Learning Hub","cat":"Other","kind":"drive","order":null,"created":1792352138427,"desc":"","dur":"","url":"https://drive.google.com/drive/folders/1CPwsptLw_P_LzsDAMf_fc9smHh4W2Mhs?usp=sharing"}], english:[], staff:[{"id": "h34a34jesxvhso5tqutb", "name": "Sheran Rajaguru", "role": "EO", "desk": "Imports", "location": "Head Office", "ext": "", "email": "", "phone": "", "note": ""}], updates:[], progress:{}, loaded:{videos:false,english:false,staff:true,updates:false},
+ videos:[{"id":"k59050z0wm6hauyfsv9z","title":"Cyber Security - Chain of Custody","cat":"Compliance","kind":"drive","order":2,"created":1792352484017,"desc":"","dur":"","url":"https://drive.google.com/file/d/1P0kB1VPAgrG-2G3cDSAg71V_o6VORdce/view?usp=drive_link"},{"id":"mc275b6ggmt7suyag7xl","title":"Cyber security - Empty Chair","cat":"Compliance","kind":"drive","order":3,"created":1792352545602,"desc":"","dur":"","url":"https://drive.google.com/file/d/1Hm-USwBCjPZFsRzBeZNR8wnBIo8NDBw8/view?usp=drive_link"},{"id":"914etp1ms123jesx5t1h","title":"Imports","cat":"Imports","kind":"drive","order":4,"created":1792352601815,"desc":"","dur":"","url":"https://drive.google.com/file/d/1_Pbf-KpKy_ACeDmmEu_iAbVVCJF0P5tI/view?usp=drive_link"},{"id":"q3g2amudfndze3utvnv4","title":"Cyber security - One Click","cat":"Compliance","kind":"drive","order":null,"created":1792352409948,"desc":"","dur":"","url":"https://drive.google.com/file/d/1z11rILkAHI8s42ZMENtP_HrI4EPg3oiG/view?usp=drive_link"},{"id":"jzgcgvsijhy01j6mk5ct","title":"Trade Finance Learning Hub","cat":"Other","kind":"drive","order":null,"created":1792352138427,"desc":"","dur":"","url":"https://drive.google.com/drive/folders/1CPwsptLw_P_LzsDAMf_fc9smHh4W2Mhs?usp=sharing"}], english:[], staff:[], updates:[], progress:{}, loaded:{videos:false,english:false,staff:true,updates:false},
  chat:[], chatBusy:false, ctl:null, adminTab:'videos'
 };
 
@@ -653,7 +654,7 @@ function applyBrand(){
 }
 
 /* ---------- navigation ---------- */
-const TABS=[['home','Home','home'],['lookup','HS Code','search'],['pay','Payment Tracker','globe'],['desk','Desks','bank'],['learn','Learn','book'],['team','Team','users']];
+const TABS=[['home','Home','home'],['lookup','HS Code','search'],['pay','Payment Tracker','globe'],['desk','Desks','bank'],['learn','Learn','book'],['team','Contacts','users']];
 function go(tab,sub=null){ S.tab=tab; S.sub=sub; try{history.replaceState(null,'','#'+tab)}catch(e){} render(); window.scrollTo(0,0) }
 function renderTabs(){
   const cur = S.tab==='english'?'learn':(['circ','alerts','sanc','terms','price'].includes(S.tab)?'home':S.tab);
@@ -1077,24 +1078,51 @@ Sentence: """${t.slice(0,800)}"""`,{modelTier:'quick',cache:false,onText:({text}
 
 /* team */
 function vTeam(){
-  const desks=['All',...DESKS.filter(d=>S.staff.some(p=>p.desk===d))];
-  const q=S.staffQ.toLowerCase();
-  const list=S.staff.filter(p=>(S.staffDesk==='All'||p.desk===S.staffDesk)&&(!q||[p.name,p.role,p.desk,p.location,p.ext].join(' ').toLowerCase().includes(q)));
+  const all=getContacts(); const q=(S.staffQ||'').toLowerCase();
+  const list=all.filter(c=>!q||[c.name,c.org,c.role,c.phone,c.email,c.note].join(' ').toLowerCase().includes(q)).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
   const col=n=>{let h=0;for(const c of String(n))h=(h*31+c.charCodeAt(0))%360;return `hsl(${210+(h%40)-20} 70% ${38+(h%14)}%)`};
   const ini=n=>String(n||'?').split(/\s+/).filter(Boolean).slice(0,2).map(s=>s[0]).join('').toUpperCase();
+  const tel=p=>String(p||'').replace(/[^\d+]/g,'');
+  const card=(c,own)=>`<div class="card person"><span class="avatar" style="background:${own?'linear-gradient(135deg,#0B2C6E,#1650D8)':col(c.name)}">${esc(ini(c.name))}</span>
+     <b>${esc(c.name)}</b><span class="small muted">${[c.role,c.org].filter(Boolean).map(esc).join(' · ')}</span>
+     <div class="contact">${c.phone?`<a class="cbtn" href="tel:${esc(tel(c.phone))}">${ic('phone')}${esc(c.phone)}</a>`:''}${c.wa?`<a class="cbtn" href="https://wa.me/${esc(c.wa)}" target="_blank" rel="noopener noreferrer">${ic('chat')}WhatsApp</a>`:''}${c.email?`<a class="cbtn" href="mailto:${esc(c.email)}">${ic('mail')}${esc(c.email)}</a>`:''}${own?'':`<button class="cbtn" data-cedit="${esc(c.id)}">${ic('edit')}Edit</button>`}</div>
+     ${c.note?`<span class="small muted" style="grid-column:2">${esc(c.note)}</span>`:''}</div>`;
   return `
-  <section class="stack"><div class="sec-h"><div><div class="eyebrow">Banking centre</div><h1 style="font-size:22px;margin-top:4px">Team directory</h1></div>${S.canEdit?`<button class="btn ghost sm" data-admin="staff">${ic('plus')}Add</button>`:''}</div>
-  ${S.staff.length?`
-   <div class="searchbar" style="border:1px solid var(--line)">${ic('search')}<input id="staffQ" value="${esc(S.staffQ)}" placeholder="Search name, role or desk" aria-label="Search team"></div>
-   <div class="chips">${desks.map(d=>`<button class="chip" data-sdesk="${esc(d)}" aria-pressed="${S.staffDesk===d}">${esc(d)}</button>`).join('')}</div>
-   <div class="stack">${list.map(p=>`<div class="card person"><span class="avatar" style="background:${col(p.name)}">${esc(ini(p.name))}</span>
-     <b>${esc(p.name)}</b><span class="small muted">${esc(p.role||'')}${p.desk?' · '+esc(p.desk):''}${p.location?' · '+esc(p.location):''}</span>
-     <div class="contact">${p.ext?`<button class="cbtn" data-copy="${esc(p.ext)}">${ic('phone')}Ext ${esc(p.ext)}</button>`:''}${p.phone?`<button class="cbtn" data-copy="${esc(p.phone)}">${ic('phone')}${esc(p.phone)}</button>`:''}${p.email?`<button class="cbtn" data-copy="${esc(p.email)}">${ic('mail')}${esc(p.email)}</button>`:''}</div>
-     ${p.note?`<span class="small muted" style="grid-column:2">${esc(p.note)}</span>`:''}</div>`).join('')||`<div class="empty"><b>No one matches</b></div>`}</div>
-   <div class="note">Tap a number or email to copy it.</div>`
-  :`<div class="empty">${ic('users')}<b>${S.loaded.staff||!S.db?'The directory is empty':'Loading directory…'}</b><span class="small">Add the trade finance and banking centre team from the admin panel — one by one or by pasting a list.</span>${S.canEdit?`<button class="btn" data-admin="staff">${ic('plus')}Add people</button>`:''}</div>`}
+  <section class="stack"><div class="sec-h"><div><div class="eyebrow">Your contacts</div><h1 style="font-size:22px;margin-top:4px">Contacts</h1></div><button class="btn ghost sm" data-cadd>${ic('plus')}Add</button></div>
+   <div class="eyebrow">Help with Trade Nova</div>
+   ${card(CREATOR,true)}
+   <div class="eyebrow" style="margin-top:6px">Saved on this phone · ${all.length}</div>
+   ${all.length?`<div class="searchbar" style="border:1px solid var(--line)">${ic('search')}<input id="staffQ" value="${esc(S.staffQ||'')}" placeholder="Search name, organisation or role" aria-label="Search contacts"></div>
+    <div class="stack">${list.map(c=>card(c,false)).join('')||`<div class="empty"><b>No one matches</b></div>`}</div>`
+   :`<div class="empty">${ic('users')}<b>No contacts yet</b><span class="small">Add the people you deal with — your trade finance desk, Customs broker, freight forwarder or correspondent bank contact. They are saved only on this phone.</span><button class="btn" data-cadd>${ic('plus')}Add a contact</button></div>`}
+   <div class="note">Your contacts stay on this device and are never uploaded. Tap a number to call or an email to write.</div>
   </section>`;
 }
+const CREATOR={id:'creator',name:'Sheran Rajaguru',role:'Creator of Trade Nova',org:'For help with the app',phone:'070 212 8617',wa:'94702128617',note:'Questions, problems or ideas for Trade Nova — call or WhatsApp.'};
+function getContacts(){ const v=LS.get('contacts',[]); return Array.isArray(v)?v:[] }
+function openContact(id){
+  const c=id?getContacts().find(x=>x.id===id)||{}:{};
+  sheet(`<div class="sheet-h"><div class="grow"><b style="font-family:var(--f-display);font-size:18px">${c.id?'Edit contact':'Add a contact'}</b><div class="small muted">Saved only on this phone</div></div><button class="x" data-close aria-label="Close">${ic('x')}</button></div>
+   <form class="sheet-b" id="contactForm" data-id="${esc(c.id||'')}">
+    <div class="field"><label for="ctName">Name</label><input class="input" id="ctName" required value="${esc(c.name||'')}"></div>
+    <div class="grid2"><div class="field"><label for="ctOrg">Organisation</label><input class="input" id="ctOrg" value="${esc(c.org||'')}" placeholder="e.g. ABC Freight, Customs, a bank"></div>
+    <div class="field"><label for="ctRole">Role</label><input class="input" id="ctRole" value="${esc(c.role||'')}" placeholder="e.g. Trade finance officer"></div>
+    <div class="field"><label for="ctPhone">Phone</label><input class="input mono" id="ctPhone" type="tel" value="${esc(c.phone||'')}"></div>
+    <div class="field"><label for="ctEmail">Email</label><input class="input" id="ctEmail" type="email" value="${esc(c.email||'')}"></div></div>
+    <div class="field"><label for="ctNote">Note</label><input class="input" id="ctNote" value="${esc(c.note||'')}" placeholder="e.g. handles export LCs"></div>
+    <div class="row"><button class="btn" type="submit">${c.id?'Save':'Add contact'}</button>${c.id?`<button class="btn danger" type="button" data-cdel="${esc(c.id)}">${ic('trash')}Delete</button>`:''}<button class="btn line" type="button" data-close>Cancel</button></div>
+   </form>`);
+}
+document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; const d=t.dataset;
+  if(d.cadd!==undefined) return openContact('');
+  if(d.cedit) return openContact(d.cedit);
+  if(d.cdel){ LS.set('contacts',getContacts().filter(x=>x.id!==d.cdel)); closeSheet(); toast('Contact deleted'); return render() }
+});
+document.addEventListener('submit',e=>{ if(e.target.id!=='contactForm') return; e.preventDefault();
+  const v=id=>$('#'+id).value.trim(); if(!v('ctName')) return toast('Add a name.');
+  const id=e.target.dataset.id||('c'+Date.now().toString(36)); const c={id,name:v('ctName'),org:v('ctOrg'),role:v('ctRole'),phone:v('ctPhone'),email:v('ctEmail'),note:v('ctNote')};
+  const all=getContacts().filter(x=>x.id!==id); all.push(c); LS.set('contacts',all); closeSheet(); toast('Saved'); render();
+});
 
 /* ---------- admin ---------- */
 function vAdmin(){
