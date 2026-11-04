@@ -30,7 +30,7 @@ python3 tools/release.py --version 2.0.1 --notes "What changed" --key /safe/plac
 # 3. commit and push — GitHub Pages serves it within a couple of minutes
 ```
 
-For a new APK: bump `versionCode`/`versionName` in `android/apktool.yml` and `android/AndroidManifest.xml`, run `tools/build_apk.sh`, then `release.py` with `--apk file.apk --apk-code N --apk-version X.Y.Z`.
+For a new APK: bump `versionCode`/`versionName` in `android/apktool.yml` and `android/AndroidManifest.xml`, run `tools/build_apk.sh`, then `release.py` with `--apk file.apk --apk-code N --apk-version X.Y.Z`. Pushing the new `docs/download/TradeNova.apk` runs the **Publish APK as a GitHub Release** workflow, which publishes it as a release; the download page links to `releases/latest/download/TradeNova.apk`, so GitHub counts downloads (shown on the admin page).
 
 ## Keys — never commit these
 
