@@ -1,0 +1,51 @@
+name: Publish APK as a GitHub Release
+
+# The Android app (docs/download/TradeNova.apk) is published as a GitHub Release so that
+# GitHub counts every download. Runs when the APK changes on main (tools/release.py --apk ...).
+# The download page links to releases/latest/download/TradeNova.apk.
+on:
+  push:
+    branches: [main]
+    paths: ['docs/download/TradeNova.apk', '.github/workflows/apk-release.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Read the APK version from the OTA manifest
+        id: ver
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, hashlib
+          p = json.loads(json.load(open('docs/ota/version.json'))['payload'])
+          a = p.get('apk') or {}
+          sha = hashlib.sha256(open('docs/download/TradeNova.apk', 'rb').read()).hexdigest()
+          if a.get('sha256') and a['sha256'] != sha:
+              raise SystemExit('docs/download/TradeNova.apk does not match the APK in docs/ota/version.json')
+          print('version=' + str(a.get('version')))
+          print('code=' + str(a.get('code')))
+          print('sha=' + sha)
+          PY
+
+      - name: Publish the release (skipped if it already exists)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: app-${{ steps.ver.outputs.version }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then echo "$TAG already published"; exit 0; fi
+          printf 'Trade Nova for Android %s (build %s).\n\nInstall it once; after that the app updates its content by itself.\n\nSHA-256: %s\n' \
+            "${{ steps.ver.outputs.version }}" "${{ steps.ver.outputs.code }}" "${{ steps.ver.outputs.sha }}" > notes.txt
+          gh release create "$TAG" docs/download/TradeNova.apk --target "$GITHUB_SHA" \
+            --title "Trade Nova for Android ${{ steps.ver.outputs.version }} (build ${{ steps.ver.outputs.code }})" \
+            --notes-file notes.txt --latest
