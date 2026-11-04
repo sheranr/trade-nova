@@ -57,6 +57,7 @@ a{color:#7FB8FF}
 </main>
 
 <main id="app" hidden>
+ <div class="card" id="dl"><div class="row" style="justify-content:space-between"><h2>Android app downloads</h2><button class="btn sm line" id="dlr">Refresh</button></div><div id="dlb" class="small mut">Loading…</div></div>
  <div class="tabs"><button data-tab="videos" aria-pressed="true">Training videos</button><button data-tab="notices" aria-pressed="false">Notices / alerts</button></div>
  <div id="pane"></div>
  <div class="card small mut"><div>Every change you publish is saved as a dated entry in GitHub, so there is a full history of who changed what and when: <a id="hist" target="_blank" rel="noopener" href="https://github.com/sheranr/trade-nova/commits/main/docs/content/live.json">view change history</a>. Phones and the web app pick up changes the next time they open with internet (allow about 2 minutes after publishing).</div></div>
@@ -88,7 +89,7 @@ async function load(){
 }
 async function signin(t,rem){
   TOKEN=t.trim(); const m=$('#lmsg'); m.innerHTML='<div class="msg warn">Checking…</div>';
-  try{ await load(); store.set(TOKEN,rem); $('#login').hidden=true; $('#app').hidden=false; $('#bar').hidden=false; $('#out').hidden=false; setDirty(false); draw(); m.innerHTML='' }
+  try{ await load(); store.set(TOKEN,rem); $('#login').hidden=true; $('#app').hidden=false; $('#bar').hidden=false; $('#out').hidden=false; setDirty(false); draw(); downloads(); m.innerHTML='' }
   catch(e){ TOKEN=''; m.innerHTML='<div class="msg bad">'+esc(e.message)+'</div>' }
 }
 function setDirty(d){ DIRTY=d; $('#pub').disabled=!d; $('#dirty').textContent=d?'You have unpublished changes':'No unpublished changes'; $('#dirty').style.color=d?'var(--warn)':'' }
@@ -154,6 +155,7 @@ document.addEventListener('click',ev=>{
   if(b.id==='go') return signin($('#tok').value,$('#rem').checked);
   if(b.id==='out'){ if(DIRTY&&!confirm('Discard unpublished changes?')) return; store.clear(); location.reload(); return }
   if(b.id==='pub') return publish();
+  if(b.id==='dlr') return downloads();
   if(d.tab){ TAB=d.tab; EDIT=null; return draw() }
   if(d.cancel!==undefined){ EDIT=null; return draw() }
   const pick=s=>{const [t,i]=s.split(':');return {t,i:+i,L:t==='v'?DATA.videos:DATA.notices}};
@@ -174,6 +176,14 @@ async function publish(){
     $('#dirty').textContent='Published ✓ — users get it within about 2 minutes when online'; $('#dirty').style.color='var(--ok)';
   }catch(e){ alert('Not published: '+e.message); setDirty(true) }
   finally{ btn.textContent='Publish to all users'; btn.disabled=!DIRTY }
+}
+async function downloads(){
+  const el=$('#dlb'); if(!el) return; el.textContent='Loading…';
+  try{ const r=await fetch('https://api.github.com/repos/'+REPO+'/releases?per_page=100',{headers:{'Accept':'application/vnd.github+json'}}); if(!r.ok) throw 0;
+    const rel=await r.json(); let tot=0;
+    const rows=rel.map(x=>{ const n=(x.assets||[]).filter(a=>/\.apk$/i.test(a.name)).reduce((s,a)=>s+a.download_count,0); tot+=n; return `<div class="item"><div class="grow"><b>${esc(x.name||x.tag_name)}</b><span class="small mut">published ${esc(new Date(x.published_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}))}</span></div><b style="font-size:18px">${n.toLocaleString()}</b></div>` }).join('');
+    el.innerHTML=`<div class="row" style="align-items:baseline;gap:10px"><b style="font-size:34px;color:var(--gold)">${tot.toLocaleString()}</b><span>downloads in total (counted from 4 Nov 2026)</span></div>${rows}<div class="small mut" style="margin-top:6px">Counts each tap on “Download for Android”, so one person downloading twice counts twice. Web app visits are not included.</div>`;
+  }catch(e){ el.textContent='Could not load the download count. Try Refresh in a minute.' }
 }
 const t=store.get(); if(t) signin(t,true);
 })();
