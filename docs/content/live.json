@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated": "2026-10-22T18:21:44.818Z",
+ "updated": "2026-11-10T19:16:51.173Z",
  "videos": [
   {
    "id": "k59050z0wm6hauyfsv9z",
@@ -39,6 +39,22 @@
    "title": "Trade Finance Learning Hub",
    "cat": "Other",
    "url": "https://drive.google.com/drive/folders/1CPwsptLw_P_LzsDAMf_fc9smHh4W2Mhs?usp=sharing",
+   "desc": "",
+   "dur": ""
+  },
+  {
+   "id": "mwb2jr5yj47y6",
+   "title": "UCP-600",
+   "cat": "Trade finance",
+   "url": "https://drive.google.com/file/d/1LdVh-OYekjF1X4KrnEf5u1TIlTsDlUlp/view?usp=drive_link",
+   "desc": "",
+   "dur": ""
+  },
+  {
+   "id": "mwb2mzfrw8svk",
+   "title": "UCP-600 ARTICLE 1",
+   "cat": "Trade finance",
+   "url": "https://drive.google.com/file/d/1tGcTUwT-idJ5iAovHnYS0h15xGf8Hxfm/view?usp=drive_link",
    "desc": "",
    "dur": ""
   }
