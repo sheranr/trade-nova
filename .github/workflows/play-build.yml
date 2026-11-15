@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -40,6 +40,22 @@ jobs:
       - name: Build
         working-directory: play
         run: gradle --no-daemon bundleRelease assembleDebug
+
+      - name: Check the build (package, version, target SDK, permissions)
+        run: |
+          AAPT2=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)aapt2
+          "$AAPT2" dump badging play/app/build/outputs/apk/debug/*.apk | grep -E "^(package|sdkVersion|targetSdkVersion|uses-permission|application-label:)"
+          "$AAPT2" dump xmltree --file AndroidManifest.xml play/app/build/outputs/apk/debug/*.apk | grep -iE "enableOnBackInvokedCallback|minSdk|targetSdk" || true
+          unzip -l play/app/build/outputs/bundle/release/*.aab | grep -E "manifest|assets/(index|app)\.html|hsdata|classes|\.so$" || true
+          ls -la play/app/build/outputs/bundle/release/ play/app/build/outputs/apk/debug/
+
+      - name: Save the outputs to the play-builds branch
+        run: |
+          mkdir -p /tmp/out && cp play/app/build/outputs/bundle/release/*.aab /tmp/out/TradeNova-play-unsigned.aab
+          cp play/app/build/outputs/apk/debug/*.apk /tmp/out/TradeNova-play-test.apk
+          cd /tmp/out && git init -q -b play-builds && git add -A
+          git -c user.name=github-actions -c user.email=actions@github.com commit -q -m "Play build from ${GITHUB_SHA::7} (run ${GITHUB_RUN_NUMBER})"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" play-builds
 
       - uses: actions/upload-artifact@v4
         with:
