@@ -1,0 +1,6 @@
+app/src/main/assets/
+build/
+app/build/
+.gradle/
+local.properties
+*.aab

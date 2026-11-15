@@ -1,0 +1,46 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Google Play build of Trade Nova.
+// versionCode: raise by 1 for every upload to Play (100, 101, 102 ...).
+// Keep it at 100 or above: the sideloaded APK uses codes below 100, and the app content
+// only shows the "download new APK" banner when the APK code is higher than this one,
+// so Play users never see that banner (Play updates the app itself).
+def PLAY_VERSION_CODE = 100
+def PLAY_VERSION_NAME = '2.2.2'
+
+android {
+    namespace 'lk.trademate.hs'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'lk.trademate.hs'   // same as the APK, so existing installs can update from Play
+        minSdk 24
+        targetSdk 36
+        versionCode PLAY_VERSION_CODE
+        versionName PLAY_VERSION_NAME
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Not signed here. The .aab is signed afterwards with the Trade Nova upload key,
+            // which is kept outside this repository.
+        }
+        debug {
+            // Test build that installs next to the real app (different id, own data).
+            applicationIdSuffix '.playtest'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}

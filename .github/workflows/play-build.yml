@@ -1,0 +1,54 @@
+name: Build Google Play bundle
+
+# Builds the Google Play version of Trade Nova (play/).
+# Runs only on the play-store branch, so main, GitHub Pages, the admin page and the
+# sideloaded APK release are not touched. The app content is taken from main (latest).
+# Output (Actions run -> Artifacts):
+#   trade-nova-play-aab  : unsigned .aab, to be signed with the upload key and uploaded to Play
+#   trade-nova-play-test : test APK ("Trade Nova (test)") that installs next to the real app
+on:
+  push:
+    branches: [play-store]
+    paths: ['play/**', '.github/workflows/play-build.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Use the latest app content from main
+        run: |
+          git fetch --depth 1 origin main
+          git checkout FETCH_HEAD -- docs android/assets-src
+          sh play/prepare.sh
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+
+      - name: Build
+        working-directory: play
+        run: gradle --no-daemon bundleRelease assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trade-nova-play-aab
+          path: play/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trade-nova-play-test
+          path: play/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
