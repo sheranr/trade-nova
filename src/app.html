@@ -690,6 +690,24 @@ html[data-theme="light"] .bgo{background:var(--sky);color:var(--blue)}
   #view.vin>*,#splash small,#splash .bar i,.skel{animation:none!important}
   .tile,.hs,.bank,.btn,.deskcard,.tab svg,#splash{transition:none!important}
 }
+
+/* 2.3 bulk HS check */
+.bkpick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bkbtn{display:flex;flex-direction:column;gap:6px;padding:14px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper);cursor:pointer;min-height:118px}
+.bkbtn b{font-family:var(--f-display);font-size:15px} .bkbtn>span:last-child{font-size:12.5px;color:var(--muted);line-height:1.35}
+.bkbtn .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center} .bkbtn .ic svg{width:22px;height:22px}
+.bkbtn:focus-within,.bkbtn:hover{border-color:var(--blue-2)}
+.bkbar{height:8px;border-radius:6px;background:var(--sky);overflow:hidden} .bkbar i{display:block;height:100%;background:var(--blue);transition:width .3s}
+.hs.bk{display:flex;flex-direction:column;align-items:stretch;gap:6px}
+.hs.bk>span:nth-child(2){justify-content:flex-start}
+.hs.bk>.c{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hs.bk>.row{display:flex;gap:4px;flex-wrap:wrap}
+.hs.bk[disabled]{cursor:default;opacity:1}
+.bkimg{height:30px;max-width:150px;border-radius:6px;border:1px solid var(--line);background:#fff;object-fit:contain}
+.bkwarn{display:flex;gap:6px;align-items:center;font-size:12.5px;font-weight:600;color:var(--warn);background:var(--warn-bg);border-radius:8px;padding:5px 8px}
+.bkwarn svg{width:14px;height:14px;flex:none}
+.p-none{background:var(--sky);color:var(--muted)} .hs.st-none{border-left-color:var(--muted)}
+@media (max-width:380px){.bkpick{grid-template-columns:1fr}}
 </style>
 </head><body>
 <div id="splash" role="img" aria-label="Trade Nova"><small>Smarter Trade · Greater Confidence</small><div class="bar"><i></i></div></div>
@@ -961,13 +979,13 @@ function applyBrand(){
 const TABS=[['home','Home','home'],['lookup','HS Code','search'],['pay','Payment Tracker','globe'],['desk','Desks','bank'],['learn','Learn','book'],['team','Contacts','users']];
 function go(tab,sub=null){ S.tab=tab; S.sub=sub; try{history.replaceState(null,'','#'+tab)}catch(e){} render(); window.scrollTo(0,0) }
 function renderTabs(){
-  const cur = S.tab==='english'?'learn':(['circ','alerts','sanc','terms','price'].includes(S.tab)?'home':S.tab);
+  const cur = S.tab==='english'?'learn':S.tab==='bulk'?'lookup':(['circ','alerts','sanc','terms','price'].includes(S.tab)?'home':S.tab);
   $('#tabs').innerHTML=TABS.map(([id,l,i])=>`<button class="tab" data-go="${id}" ${cur===id?'aria-current="page"':''}>${ic(i)}<span>${l}</span></button>`).join('');
 }
 function render(){
   renderTabs();
   const v=$('#view');
-  const fn={home:vHome,price:vPrice,circ:vCirc,alerts:vAlerts,sanc:vSanc,terms:vTerms,lookup:vLookup,learn:vLearn,desk:vDesk,english:vEnglish,pay:vPay,team:vTeam}[S.tab]||vHome;
+  const fn={home:vHome,bulk:vBulk,price:vPrice,circ:vCirc,alerts:vAlerts,sanc:vSanc,terms:vTerms,lookup:vLookup,learn:vLearn,desk:vDesk,english:vEnglish,pay:vPay,team:vTeam}[S.tab]||vHome;
   const keepFocus=document.activeElement&&document.activeElement.id; const sel=keepFocus&&document.activeElement.selectionStart;
   v.innerHTML=fn();
   if(keepFocus){const el=document.getElementById(keepFocus); if(el&&el.tagName!=='BUTTON'){el.focus(); try{el.setSelectionRange(sel,sel)}catch(e){}}}
@@ -1014,6 +1032,7 @@ function vHome(){
   <section class="stack"><div class="sec-h"><h2>Quick access</h2></div>
   <div class="tiles" aria-label="Sections">
     ${qt('data-go="lookup"','g-blue','calc','HS &amp; duty','Status, levies and a duty estimate')}
+    ${qt('data-go="bulk"','g-indigo','doc','Bulk HS check','Many codes from a PDF, Word, Excel or photo','<span class="cnt">New</span>')}
     ${qt('data-go="price"','g-teal','calc','Invoice price check','Any HS code: compare with Sri Lanka import prices')}
     ${qt('data-go="circ"','g-gold','doc','Circulars &amp; gazettes','Original tariff guide, ICL, SCL and gazettes')}
     ${qt('data-go="alerts"','g-orange','bell','Alerts','New rules, deadlines and your watchlist',nNew?`<span class="cnt">${nNew>9?'9+':nNew} new</span>`:'')}
@@ -1046,6 +1065,7 @@ function vLookup(){
       ${S.q?`<button type="button" class="x" data-clear style="border:0;background:none" aria-label="Clear">${ic('x')}</button>`:''}
     </form>
     <div class="chips" role="group" aria-label="Filter by status">${f.map(([k,l])=>`<button class="chip" data-filter="${k}" aria-pressed="${S.filter===k}">${l}</button>`).join('')}</div>
+    <button class="btn ghost sm" style="align-self:flex-start" data-go="bulk">${ic('doc')}Check many codes at once — PDF, Word, Excel or photo</button>
   </section>
   ${S.loading?`<div class="res" aria-busy="true"><div class="small muted">Loading tariff data…</div>${'<div class="skel hs-sk"></div>'.repeat(4)}</div>`:S.loadErr?`<div class="empty"><b>Tariff data could not load</b><span class="small">Reload the page to try again.</span></div>`:
    !S.q&&S.filter==='all'?lookupIntro():
@@ -2441,6 +2461,305 @@ document.addEventListener('click',e=>{
   }
 })();
 document.addEventListener('click',e=>{ const t=e.target.closest('[data-otarestart]'); if(t&&!IS_APK){ e.stopImmediatePropagation(); OTA.restarting=true; navigator.serviceWorker.getRegistration().then(r=>{ if(r&&r.waiting) r.waiting.postMessage('skip'); else location.reload() }) } },true);
+
+/* ---------- 2.3 Bulk HS check: read many HS codes from a PDF, Word, Excel, photo or pasted text, and show the import status of each ---------- */
+const B={step:'in', items:[], src:'', when:'', busy:'', prog:0, filter:'all', err:'', edit:false, warn:''};
+const HS_OK_LEN=n=>n>=4&&n<=10;
+/* 1. find HS codes in plain text, in document order */
+function hsTokens(text){
+  let t=String(text||'').replace(/ /g,' ').replace(/\r/g,'');
+  t=t.replace(/(^|[^\w])\d{1,2}[\/.\-]\d{1,2}[\/.\-](?:19|20)?\d{2}(?![\w])/g,'$1 ');            // dates such as 01/10/2026
+  // a code broken over two lines, e.g. "120999" + new line + "10"
+  t=t.replace(/(\d[\d.]*)[ \t]*\n[ \t]*(\d+)(?=[^\d.]|$)/g,(m,a,b)=>{ const la=a.replace(/\D/g,'').length, lb=b.length, ok=n=>n%2===0&&n>=4&&n<=10; return (!ok(lb)||!ok(la))&&ok(la+lb)?a+b:m });
+  const out=[], re=/(^|[^\w.])(\d{2,4}(?:\.\d{1,6}){1,3}|\d{4,10})(?![\w]|\.\d)/g; let m;
+  while((m=re.exec(t))){ let raw=m[2], k=raw;
+    if(raw.includes('.')){ const p=raw.split('.'); if(p[0].length===3) p[0]='0'+p[0]; if(p[0].length===2&&p.length===2&&p[1].length===2){ k=p.join('') } else { k=p[0]+p.slice(1).map(x=>x.length%2?x+'0':x).join('') } }
+    k=k.replace(/\D/g,''); if(!HS_OK_LEN(k.length)) continue;
+    out.push({raw,k});
+  }
+  return out;
+}
+/* 2. match a code against the tariff (exact line, 6-digit with no national split, heading, leading 0 lost, etc.) */
+function bulkMatch(k0){
+  const R=S.rows, by=B.idx||(B.idx=new Map(R.map(o=>[o.k,o])));
+  const tries=[[k0,'']]; if(k0.length%2) tries.push(['0'+k0,'Read as 0'+k0+' (leading 0 added)']);
+  for(const [k,note] of tries){
+    let o=by.get(k); if(o&&!o.grp) return {kind:'exact',o,note};
+    if(k.length>8){ o=by.get(k.slice(0,8)); if(o&&!o.grp) return {kind:'exact',o,note:(note?note+'. ':'')+'Matched on the first 8 digits'} }
+    if(k.length>=8&&/^0+$/.test(k.slice(6))){ o=by.get(k.slice(0,6)); if(o&&!o.grp) return {kind:'exact',o,note:'Tariff line '+o.c+' (no 8-digit split)'} }
+    if(k.length<8){ const kids=R.filter(r=>!r.grp&&r.k.startsWith(k)&&r.k!==k); if(kids.length) return {kind:'parent',rows:kids,note} }
+  }
+  const k=k0.length%2?'0'+k0:k0;
+  if(k.length>=8){ const kids=R.filter(r=>!r.grp&&r.k.startsWith(k.slice(0,6))); if(kids.length) return {kind:'near',rows:kids,note:''} }
+  return {kind:'none',note:''};
+}
+const BCAT={bad:['bad','Banned'],susp:['susp','ICL suspended'],warn:['warn','Licence required'],cond:['info','Conditions apply'],ok:['ok','No ICL listed'],check:['hcfc','Check sub-line'],none:['none','Not in tariff']};
+const BORDER=['bad','susp','warn','cond','check','none','ok'];
+function lineCat(o){ const k=o.st[0][0];
+  if(k==='bad'||k==='susp'||k==='warn') return k;
+  if(o.st.some(([x,t])=>['info','teal','hcfc'].includes(x)||String(t).startsWith('Some goods'))) return 'cond';
+  return 'ok';
+}
+function bulkResolve(it){
+  const m=bulkMatch(it.k); it.m=m;
+  if(m.kind==='exact'){ it.cat=lineCat(m.o); return it }
+  if(m.kind==='none'){ it.cat='none'; return it }
+  const cats=[...new Set(m.rows.map(lineCat))];
+  it.cat=m.kind==='parent'&&cats.length===1?cats[0]:'check';
+  it.kids=BORDER.filter(c=>cats.includes(c)).map(c=>[c,m.rows.filter(r=>lineCat(r)===c).length]);
+  return it;
+}
+function bulkSet(list,src){
+  const seen=new Map(), items=[];
+  for(const x of list){ const key=x.k; if(seen.has(key)){ const p=seen.get(key); p.n++; if(x.unsure&&!p.unsure){p.unsure=x.unsure;p.img=x.img||p.img} continue }
+    const it={raw:x.raw||x.k,k:x.k,n:1,unsure:x.unsure||'',img:x.img||'',conf:x.conf}; seen.set(key,it); items.push(it) }
+  // drop 4-digit numbers that are not a real heading (years, page numbers); keep longer ones so the user sees them
+  B.items=items.map(bulkResolve).filter(it=>!(it.cat==='none'&&it.k.length<=5));
+  B.src=src; B.when=new Date().toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  B.step='res'; B.filter='all'; B.busy=''; B.edit=false; render(); window.scrollTo(0,0);
+}
+
+/* 3. readers */
+const extOf=n=>(String(n).toLowerCase().match(/\.([a-z0-9]+)$/)||[])[1]||'';
+async function unzip(buf,want){
+  const u8=new Uint8Array(buf), dv=new DataView(buf); let e=u8.length-22; while(e>=0&&dv.getUint32(e,true)!==0x06054b50) e--;
+  if(e<0) throw new Error('not a zip'); const n=dv.getUint16(e+10,true); let p=dv.getUint32(e+16,true); const out={}, td=new TextDecoder();
+  for(let i=0;i<n&&dv.getUint32(p,true)===0x02014b50;i++){
+    const meth=dv.getUint16(p+10,true), cs=dv.getUint32(p+20,true), nl=dv.getUint16(p+28,true), xl=dv.getUint16(p+30,true), cl=dv.getUint16(p+32,true), lo=dv.getUint32(p+42,true);
+    const name=td.decode(u8.subarray(p+46,p+46+nl)); p+=46+nl+xl+cl; if(!want(name)) continue;
+    const st=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true), data=u8.slice(st,st+cs);
+    out[name]=meth===0?data:new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+  }
+  return out;
+}
+const xmlText=s=>s.replace(/<[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&');
+async function readWord(buf){
+  const f=await unzip(buf,n=>/^word\/(document|header\d*|footer\d*)\.xml$/.test(n)); const td=new TextDecoder();
+  return Object.values(f).map(b=>xmlText(td.decode(b).replace(/<w:tab\/>/g,'\t').replace(/<w:br[^>]*\/>/g,'\n').replace(/<\/w:p>/g,'\n').replace(/<\/w:tc>/g,'\t'))).join('\n');
+}
+async function readExcel(buf){
+  const f=await unzip(buf,n=>n==='xl/sharedStrings.xml'||/^xl\/worksheets\/sheet\d+\.xml$/.test(n)); const td=new TextDecoder();
+  const ss=f['xl/sharedStrings.xml']?[...td.decode(f['xl/sharedStrings.xml']).matchAll(/<si>([\s\S]*?)<\/si>/g)].map(m=>xmlText(m[1])):[];
+  const num=v=>{ if(!/^\d+\.\d+$/.test(v)) return v; v=(+v).toFixed(6).replace(/\.?0+$/,''); if(!v.includes('.')) return v; let [a,b]=v.split('.'); if(a.length===3) a='0'+a; if(b.length%2) b+='0'; return a+'.'+b };   // 8471.3 → 8471.30, 402.99 → 0402.99
+  return Object.keys(f).filter(n=>n.includes('worksheets')).sort().map(n=>{
+    const x=td.decode(f[n]);
+    return [...x.matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)].map(r=>[...r[1].matchAll(/<c([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)].map(c=>{
+      const a=c[1]||'', body=c[2]||''; const v=(body.match(/<v>([\s\S]*?)<\/v>/)||[])[1];
+      if(/t="s"/.test(a)) return ss[+v]||''; if(/t="inlineStr"/.test(a)) return xmlText(body); if(/t="str"/.test(a)) return xmlText(v||''); return v?num(v):'';
+    }).join('\t')).join('\n');
+  }).join('\n');
+}
+function readOldDoc(buf){ const u8=new Uint8Array(buf); return new TextDecoder('latin1').decode(u8).replace(/[^\x20-\x7e\n\r\t]/g,' ')+'\n'+new TextDecoder('utf-16le').decode(u8.subarray(0,u8.length&~1)).replace(/[^\x20-\x7e\n\r\t]/g,' ') }
+
+/* 4. OCR for photos and scanned pages (Tesseract, runs on this device; the 7 MB engine is downloaded once) */
+let TESS=null, OCRW=null;
+const ocrBase=()=>new URL('ocr/',location.href).href;
+function loadTess(){ if(TESS) return TESS; TESS=new Promise((res,rej)=>{ const s=document.createElement('script'); s.src='ocr/tesseract.min.js'; s.onload=()=>res(window.Tesseract); s.onerror=()=>{TESS=null;rej(new Error('ocr'))}; document.head.appendChild(s) }); return TESS }
+async function ocrWorker(){
+  if(OCRW) return OCRW; const T=await loadTess(), b=ocrBase();
+  OCRW=T.createWorker('eng',1,{workerPath:b+'worker.min.js',corePath:b,langPath:b,gzip:true,logger:m=>{ if(m.status==='recognizing text'){ B.sub=m.progress; bulkProg() } else if(/load|initializ/.test(m.status)){ B.busyNote='Preparing the text reader (first time only)…'; bulkProg() } }});
+  OCRW.catch(()=>{OCRW=null}); return OCRW;
+}
+function toCanvas(src,maxSide=2000){
+  const w0=src.width, h0=src.height, s=Math.min(1,maxSide/Math.max(w0,h0)), c=document.createElement('canvas');
+  c.width=Math.round(w0*s); c.height=Math.round(h0*s); c.getContext('2d').drawImage(src,0,0,c.width,c.height); return c;
+}
+/* remove table lines, tick marks and stamps so the digits stand alone */
+function cleanForOcr(c){
+  const W=c.width, H=c.height, px=c.getContext('2d').getImageData(0,0,W,H).data, N=W*H, g=new Float32Array(N);
+  for(let i=0;i<N;i++) g[i]=.299*px[i*4]+.587*px[i*4+1]+.114*px[i*4+2];
+  const I=new Uint32Array((W+1)*(H+1));
+  for(let y=0;y<H;y++){ let r=0; for(let x=0;x<W;x++){ r+=g[y*W+x]; I[(y+1)*(W+1)+x+1]=I[y*(W+1)+x+1]+r } }
+  const R=Math.max(10,Math.round(Math.min(W,H)/100)), dark=new Uint8Array(N);
+  for(let y=0;y<H;y++){ const y0=Math.max(0,y-R), y1=Math.min(H,y+R+1); for(let x=0;x<W;x++){ const x0=Math.max(0,x-R), x1=Math.min(W,x+R+1);
+    const m=(I[y1*(W+1)+x1]-I[y0*(W+1)+x1]-I[y1*(W+1)+x0]+I[y0*(W+1)+x0])/((y1-y0)*(x1-x0)); dark[y*W+x]=g[y*W+x]<m-12?1:0 } }
+  const line=new Uint8Array(N), kh=Math.max(25,W/40|0), kv=Math.max(25,H/40|0);
+  for(let y=0;y<H;y++){ let s=0; for(let x=0;x<=W;x++){ if(x<W&&dark[y*W+x]) continue; if(x-s>=kh) for(let j=s;j<x;j++) line[y*W+j]=1; s=x+1 } }
+  for(let x=0;x<W;x++){ let s=0; for(let y=0;y<=H;y++){ if(y<H&&dark[y*W+x]) continue; if(y-s>=kv) for(let j=s;j<y;j++) line[j*W+x]=1; s=y+1 } }
+  for(let y=1;y<H-1;y++) for(let x=1;x<W-1;x++){ const i=y*W+x; if(dark[i]&&!line[i]&&(line[i-1]===1||line[i+1]===1||line[i-W]===1||line[i+W]===1||line[i-W-1]===1||line[i-W+1]===1||line[i+W-1]===1||line[i+W+1]===1)) line[i]=2 }
+  for(let i=0;i<N;i++) if(line[i]) dark[i]=0;
+  const lab=new Int32Array(N), comps=[], st=new Int32Array(N); let n=0;
+  for(let i=0;i<N;i++){ if(!dark[i]||lab[i]) continue; n++; let sp=0; st[sp++]=i; lab[i]=n; let x0=W,x1=0,y0=H,y1=0,sz=0;
+    while(sp){ const j=st[--sp], x=j%W, y=(j/W)|0; sz++; if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y;
+      for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ const xx=x+dx, yy=y+dy; if(xx<0||yy<0||xx>=W||yy>=H) continue; const q=yy*W+xx; if(dark[q]&&!lab[q]){ lab[q]=n; st[sp++]=q } } }
+    comps.push([x1-x0+1,y1-y0+1,sz]) }
+  const hs=comps.filter(([w,h,s])=>s>30&&h>8).map(c=>c[1]).sort((a,b)=>a-b), ch=hs.length?hs[hs.length>>1]:20;
+  const keep=new Uint8Array(n+1); comps.forEach(([w,h,s],i)=>{ keep[i+1]=s>=15&&h<=1.8*ch&&!(w>3*ch&&h<.5*ch)?1:0 });
+  const out=document.createElement('canvas'); out.width=W; out.height=H; const ctx=out.getContext('2d'), im=ctx.createImageData(W,H);
+  for(let i=0;i<N;i++){ const v=keep[lab[i]]&&lab[i]?0:255; im.data[i*4]=im.data[i*4+1]=im.data[i*4+2]=v; im.data[i*4+3]=255 }
+  ctx.putImageData(im,0,0); return out;
+}
+/* read one image with two layout modes and keep, for each spot on the page, the reading that is a real tariff line */
+async function ocrCanvas(c,label){
+  const w=await ocrWorker(), clean=cleanForOcr(c), cands=[];
+  for(const [pi,psm] of [[0,'11'],[1,'3']]){
+    B.busyNote=label+(pi?' — second pass':''); B.sub=0; bulkProg();
+    await w.setParameters({tessedit_pageseg_mode:psm,tessedit_char_whitelist:''});
+    const r=await w.recognize(clean);
+    for(const wd of r.data.words||[]) for(const t of hsTokens(wd.text)) cands.push({...t,conf:wd.confidence,b:wd.bbox,pass:pi});
+  }
+  const iou=(a,b)=>{ const ix=Math.max(0,Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)), iy=Math.max(0,Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)), i=ix*iy; return i/((a.x1-a.x0)*(a.y1-a.y0)+(b.x1-b.x0)*(b.y1-b.y0)-i||1) };
+  const groups=[];
+  for(const x of cands){ const g=groups.find(g=>iou(g.b,x.b)>.3); if(g) g.c.push(x); else groups.push({b:x.b,c:[x]}) }
+  const real=k=>{ const m=bulkMatch(k); return m.kind==='exact'?2:m.kind==='none'?0:1 };
+  const out=[];
+  for(const g of groups){
+    const by={}; for(const x of g.c){ const e=by[x.k]||(by[x.k]={k:x.k,raw:x.raw,conf:0,n:0}); e.conf=Math.max(e.conf,x.conf); e.n++ }
+    const opts=Object.values(by).map(e=>({...e,real:real(e.k),even:e.k.length%2===0})).sort((a,b)=>b.real-a.real||b.even-a.even||b.n-a.n||b.conf-a.conf);
+    const best=opts[0], rivals=opts.filter(o=>o!==best&&o.real&&o.even&&o.conf>=60&&(o.n>=best.n||o.conf>=best.conf-10));
+    let unsure=''; if(rivals.length) unsure='Could also be '+rivals.map(o=>fmtCode(o.k)).join(' or '); else if(best.conf<70&&best.n<2) unsure='Faint reading'; else if(!best.real) unsure='Not a tariff code — check the digits';
+    const bx=g.b, pad=6, cw=Math.min(c.width,bx.x1+pad)-Math.max(0,bx.x0-pad), chh=Math.min(c.height,bx.y1+pad)-Math.max(0,bx.y0-pad);
+    let img=''; try{ const t=document.createElement('canvas'), s=Math.min(1,44/chh); t.width=Math.max(1,cw*s|0); t.height=Math.max(1,chh*s|0); t.getContext('2d').drawImage(c,Math.max(0,bx.x0-pad),Math.max(0,bx.y0-pad),cw,chh,0,0,t.width,t.height); img=t.toDataURL('image/jpeg',.7) }catch(e){}
+    out.push({k:best.k,raw:best.raw,conf:best.conf,unsure,img,y:bx.y0,x:bx.x0});
+  }
+  // reading order: top to bottom, left to right (rows within ~half a line)
+  const hh=groups.map(g=>g.b.y1-g.b.y0).sort((a,b)=>a-b), tol=Math.max(8,(hh[hh.length>>1]||20)*.6);
+  out.sort((a,b)=>Math.abs(a.y-b.y)<tol?a.x-b.x:a.y-b.y);
+  return out;
+}
+async function imageFromFile(f){
+  const url=URL.createObjectURL(f);
+  try{ const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url }); return toCanvas(img) } finally { setTimeout(()=>URL.revokeObjectURL(url),1000) }
+}
+async function readPdf(buf,name){
+  const lib=await loadPdfJs(); const doc=await lib.getDocument({data:buf}).promise; const all=[];
+  for(let p=1;p<=doc.numPages;p++){
+    B.busyNote=`Reading ${name} — page ${p} of ${doc.numPages}`; B.sub=0; bulkProg();
+    const page=await doc.getPage(p), tc=await page.getTextContent();
+    const text=tc.items.map(i=>i.str+(i.hasEOL?'\n':' ')).join('');
+    if(text.replace(/\s/g,'').length>=12) all.push(...hsTokens(text));
+    else { const vp=page.getViewport({scale:1}), s=Math.min(3,2000/Math.max(vp.width,vp.height)), v2=page.getViewport({scale:s});
+      const c=document.createElement('canvas'); c.width=v2.width|0; c.height=v2.height|0; const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height);
+      await page.render({canvasContext:ctx,viewport:v2}).promise; all.push(...await ocrCanvas(c,`Reading scanned page ${p} of ${doc.numPages}`)) }
+  }
+  return all;
+}
+async function bulkFiles(files){
+  files=[...files]; if(!files.length) return;
+  B.err=''; B.warn=''; B.busy='Reading…'; B.busyNote=''; B.sub=0; render();
+  const all=[];
+  try{
+    for(const f of files){
+      const ext=extOf(f.name), isImg=/^image\//.test(f.type)||['jpg','jpeg','png','webp','bmp','gif','heic'].includes(ext);
+      B.busyNote='Reading '+f.name; bulkProg();
+      if(isImg){ all.push(...await ocrCanvas(await imageFromFile(f),'Reading the photo')); continue }
+      const buf=await f.arrayBuffer();
+      if(ext==='pdf'||f.type==='application/pdf') all.push(...await readPdf(buf,f.name));
+      else if(['docx','dotx','docm','dotm'].includes(ext)) all.push(...hsTokens(await readWord(buf)));
+      else if(['xlsx','xlsm','xltx'].includes(ext)) all.push(...hsTokens(await readExcel(buf)));
+      else if(ext==='doc'||ext==='dot') all.push(...hsTokens(readOldDoc(buf)));
+      else all.push(...hsTokens(new TextDecoder().decode(buf)));
+    }
+  }catch(e){ B.busy=''; B.err=/ocr/.test(e&&e.message)?'The photo reader could not load. Connect to the internet once so it can download (about 7 MB), then try again.':'Could not read '+(files.length>1?'one of the files':'this file')+'. Try a PDF or a clear photo, or paste the codes.'; return render() }
+  if(!all.length){ B.busy=''; B.err='No HS codes were found in '+(files.length>1?'these files':files[0].name)+'. If it is a photo, take it closer and straight on, in good light — or paste the codes.'; return render() }
+  bulkSet(all,files.map(f=>f.name).join(', '));
+}
+function bulkProg(){ const el=document.getElementById('bkProg'); if(!el) return; el.querySelector('b').textContent=B.busyNote||B.busy; el.querySelector('i').style.width=Math.round((B.sub||0)*100)+'%' }
+
+/* 5. screens */
+function vBulk(){
+  if(S.loading) return `<div class="res" aria-busy="true"><div class="small muted">Loading tariff data…</div></div>`;
+  const head=`<section class="desk-hero" style="background:linear-gradient(150deg,#0B2038,#123E6E)"><div class="eyebrow">Many codes at once</div><h1>Bulk HS check</h1><p>Upload the customer's PDF, Word or Excel list, or a photo of a scanned page. Trade Nova finds every HS code and shows its import status.</p></section>`;
+  if(B.busy) return head+`<section class="card stack" id="bkProg" aria-live="polite"><b>${esc(B.busyNote||B.busy)}</b><div class="bkbar"><i style="width:${Math.round((B.sub||0)*100)}%"></i></div><div class="small muted">Everything is read on this device — the document is not uploaded anywhere.</div></section>`;
+  if(B.step==='res') return head+bulkResults();
+  return head+bulkInput();
+}
+function bulkInput(){
+  const canFile=!IS_APK;
+  return `${B.err?`<div class="result bad">${esc(B.err)}</div>`:''}
+  ${canFile?`<section class="card stack">
+    <div class="bkpick">
+     <label class="bkbtn"><input type="file" id="bkFile" multiple accept=".pdf,.doc,.docx,.dotx,.xlsx,.xlsm,.csv,.txt,image/*,application/pdf" hidden><span class="ic g g-blue">${ic('doc')}</span><b>Upload a file</b><span>PDF, Word, Excel or a scanned image</span></label>
+     <label class="bkbtn"><input type="file" id="bkCam" accept="image/*" capture="environment" hidden><span class="ic g g-teal">${ic('search')}</span><b>Take a photo</b><span>Hold the page flat, in good light</span></label>
+    </div>
+    <div class="note">Read on this device — nothing is uploaded. Photos and scanned pages need a one-time download of the text reader (about 7 MB).</div></section>`
+  :`<section class="card stack"><b>Upload files and photos in the web app</b><div class="small muted">This Android version can check pasted codes. To read a PDF, Word file or a photo, open Trade Nova in the browser — it works the same way.</div><button class="btn ghost" style="align-self:flex-start" data-bkweb>${ic('link')}Open Bulk HS check in the browser</button></section>`}
+  <section class="card stack"><label for="bkText"><b>Or paste the codes</b> <span class="small muted">— from an email, LC or invoice. Any format: 8471.30.10, 84713010, 8471</span></label>
+   <textarea class="input mono" id="bkText" rows="6" placeholder="0102.21, 0802.80.90, 15119020&#10;0405.20/07134012">${esc(B.paste||'')}</textarea>
+   <button class="btn" style="align-self:flex-start" data-bkpaste>${ic('search')}Check these codes</button></section>
+  <section class="card stack small"><b style="font-family:var(--f-display)">How it works</b>
+   <ul class="ticks"><li>Finds codes in any format, including codes split over two lines and lists separated by commas or slashes.</li><li>Each code is checked against NITG 2026 and the Consolidated ICL 01.04.2026 already in the app.</li><li>Codes read from a photo are shown with the image of the digits, so you can compare. Doubtful readings are marked.</li></ul></section>`;
+}
+function bulkCard(it){
+  const pill=([k,t])=>`<span class="pill p-${k}"><i></i>${esc(t)}</span>`;
+  const m=it.m, o=m.o;
+  let body='';
+  if(m.kind==='exact') body=`<span class="row" style="gap:4px;flex-wrap:wrap">${pills(cardPills(o))}</span><span class="t">${esc(o.d)}</span>${o.p?`<span class="pth">${esc(o.p)}</span>`:''}<span class="rates"><span>Duty <b>${esc(o.gd||'–')}</b></span><span>VAT <b>${esc(o.vat||'–')}</b></span>${o.cess?`<span>CESS <b>${esc(o.cess)}</b></span>`:''}</span>`;
+  else if(m.kind==='none') body=`<span class="row">${pill(['none','Not in tariff'])}</span><span class="t small muted">No tariff line with this number in NITG 2026. Check the digits with the customer.</span>`;
+  else body=`<span class="row" style="gap:4px;flex-wrap:wrap">${pill(BCAT[it.cat]) }</span><span class="t">${m.kind==='near'?`No line ${esc(fmtCode(it.k))} in NITG 2026. The 6-digit code ${esc(fmtCode(it.k.slice(0,6)))} has ${m.rows.length} line${m.rows.length>1?'s':''}:`:`${m.rows.length} tariff lines under ${esc(fmtCode(it.k.length%2?'0'+it.k:it.k))}:`}</span><span class="row" style="gap:4px;flex-wrap:wrap">${it.kids.map(([c,n])=>`<span class="pill p-${BCAT[c][0]}"><i></i>${n} ${esc(BCAT[c][1])}</span>`).join('')}</span><span class="small muted">Tap to see each line and pick the one that fits the goods.</span>`;
+  const tap=m.kind==='exact'?`data-hs="${esc(o.c)}"`:m.kind==='none'?'disabled':`data-bkopen="${esc(m.kind==='near'?it.k.slice(0,6):(it.k.length%2?'0'+it.k:it.k))}"`;
+  return `<button class="hs bk st-${esc(BCAT[it.cat][0])}" ${tap}>
+   <span class="c">${it.img?`<img class="bkimg" src="${it.img}" alt="Digits as read from the document">`:''}<span class="code-seg">${esc(m.kind==='exact'?o.c:fmtCode(it.k))}</span>${it.n>1?`<span class="small muted">×${it.n}</span>`:''}</span>
+   ${it.unsure?`<span class="bkwarn">${ic('shield')} Check the digits: ${esc(it.unsure)}</span>`:''}
+   ${m.note?`<span class="small muted">${esc(m.note)}${it.raw&&it.raw.replace(/\D/g,'')!==(o?o.k:'')?' · written as '+esc(it.raw):''}</span>`:''}
+   ${body}</button>`;
+}
+function bulkCounts(){ const c={}; B.items.forEach(it=>c[it.cat]=(c[it.cat]||0)+1); return c }
+function bulkResults(){
+  const c=bulkCounts(), n=B.items.length, unsure=B.items.filter(i=>i.unsure).length;
+  const list=B.filter==='all'?B.items:B.filter==='unsure'?B.items.filter(i=>i.unsure):B.items.filter(i=>i.cat===B.filter);
+  const stop=(c.bad||0)+(c.susp||0);
+  return `<section class="card stack">
+    <div class="sec-h"><h2>${n} HS code${n===1?'':'s'} checked</h2><span class="small muted">${esc(B.when)}</span></div>
+    <div class="small muted" style="word-break:break-all">From: ${esc(B.src)}</div>
+    <div class="result ${stop?'bad':c.warn||c.check||c.none||unsure?'warn':'ok'}"><b>${stop?`${stop} code${stop>1?'s':''} cannot be imported now (banned or ICL suspended)`:c.warn?`${c.warn} code${c.warn>1?'s':''} need an Import Control Licence`:c.check||c.none?'Some codes need a closer look':unsure?`No import control listed — but check ${unsure} doubtful reading${unsure>1?'s':''}`:'No import control listed for these codes'}</b>
+     <span>${BORDER.filter(k=>c[k]).map(k=>`${BCAT[k][1]}: ${c[k]}`).join(' · ')}${unsure?` · Check digits: ${unsure}`:''}</span></div>
+    <div class="chips" style="flex-wrap:wrap" role="group" aria-label="Show">
+     <button class="chip" data-bkf="all" aria-pressed="${B.filter==='all'}">All ${n}</button>
+     ${BORDER.filter(k=>c[k]).map(k=>`<button class="chip" data-bkf="${k}" aria-pressed="${B.filter===k}">${esc(BCAT[k][1])} ${c[k]}</button>`).join('')}
+     ${unsure?`<button class="chip" data-bkf="unsure" aria-pressed="${B.filter==='unsure'}">Check digits ${unsure}</button>`:''}
+    </div>
+    <div class="row" style="gap:8px;flex-wrap:wrap">
+     <button class="btn sm" data-bkshare>${ic('link')}Share</button>
+     <button class="btn sm ghost" data-bkcopy>${ic('copy')}Copy</button>
+     ${IS_APK?'':`<button class="btn sm ghost" data-bkcsv>${ic('doc')}Excel (CSV)</button>`}
+     <button class="btn sm ghost" data-bkedit>Edit codes</button>
+     <button class="btn sm ghost" data-bknew>${ic('plus')}New check</button>
+    </div>
+    ${B.edit?`<div class="stack"><label for="bkEdit" class="small"><b>Codes</b> — fix any digit, one code per line</label><textarea class="input mono" id="bkEdit" rows="8">${esc(B.items.map(i=>i.raw).join('\n'))}</textarea><button class="btn sm" style="align-self:flex-start" data-bkrecheck>Check again</button></div>`:''}
+  </section>
+  <div class="res">${list.map(bulkCard).join('')||'<div class="empty"><b>Nothing in this group</b></div>'}</div>
+  <div class="note">Status from Sri Lanka Customs NITG 2026 and the Consolidated Import Control List 01.04.2026, as held in Trade Nova. Codes read from photos may contain reading errors — compare with the document. Always confirm with Customs and the latest gazette before acting.</div>`;
+}
+function bulkSummaryText(){
+  const c=bulkCounts();
+  const lines=B.items.map(it=>{ const m=it.m; const code=m.kind==='exact'?m.o.c:fmtCode(it.k);
+    const st=m.kind==='exact'?m.o.st.map(x=>x[1]).join(', '):m.kind==='none'?'Not in tariff':BCAT[it.cat][1]+' — '+it.kids.map(([k,n])=>BCAT[k][1]+': '+n).join(', ');
+    return `${code} — ${st}${it.unsure?' (check digits)':''}` });
+  return `Trade Nova — Bulk HS check (${B.when})\nSource: ${B.src}\n${B.items.length} codes: ${BORDER.filter(k=>c[k]).map(k=>BCAT[k][1]+': '+c[k]).join(', ')}\n\n${lines.join('\n')}\n\nNITG 2026 + Consolidated ICL 01.04.2026. Please confirm with Customs before acting.`;
+}
+function bulkCsv(){
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const rows=[['As written','HS code','Status','Description','General duty','VAT','PAL','CESS','Excise','SSCL','Note','Reading']];
+  for(const it of B.items){ const m=it.m, o=m.o;
+    if(m.kind==='exact') rows.push([it.raw,o.c,o.st.map(x=>x[1]).join('; '),o.d,o.gd,o.vat,o.pal,o.cess,o.exc,o.sscl,m.note,it.unsure]);
+    else rows.push([it.raw,fmtCode(it.k),m.kind==='none'?'Not in tariff':BCAT[it.cat][1],m.kind==='none'?'':it.kids.map(([k,n])=>BCAT[k][1]+': '+n).join('; '),'','','','','','',m.note,it.unsure]) }
+  const blob=new Blob(['﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='TradeNova-bulk-HS-check-'+new Date().toISOString().slice(0,10)+'.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+}
+function bulkSubLines(code){
+  const rows=S.rows.filter(r=>!r.grp&&r.k.startsWith(code));
+  sheet(`<div class="sheet-h"><div class="grow"><div class="eyebrow">Lines under</div><div class="big-code">${esc(fmtCode(code))}</div></div><button class="x" data-close aria-label="Close">${ic('x')}</button></div>
+   <div class="sheet-b"><div class="small muted">Pick the line that matches the goods on the invoice.</div><div class="res">${rows.map(hsCard).join('')}</div></div>`);
+}
+document.addEventListener('change',e=>{ if(e.target.id==='bkFile'||e.target.id==='bkCam'){ const f=e.target.files; if(f&&f.length) bulkFiles(f); } });
+document.addEventListener('input',e=>{ if(e.target.id==='bkText') B.paste=e.target.value });
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button'); if(!t) return; const d=t.dataset;
+  if(d.bkpaste!==undefined){ const v=($('#bkText')||{}).value||''; B.paste=v; const toks=hsTokens(v); if(!toks.length){ B.err='No HS codes found in the pasted text.'; return render() } B.err=''; return bulkSet(toks,'Pasted text') }
+  if(d.bkf){ B.filter=d.bkf; return render() }
+  if(d.bknew!==undefined){ B.step='in'; B.items=[]; B.err=''; return render() }
+  if(d.bkedit!==undefined){ B.edit=!B.edit; return render() }
+  if(d.bkrecheck!==undefined){ const v=($('#bkEdit')||{}).value||''; const prev=new Map(B.items.map(i=>[i.raw,i])); const toks=v.split(/\n/).flatMap(l=>hsTokens(l).map(x=>{ const p=prev.get(l.trim()); return p&&p.k===x.k?{...x,img:p.img,unsure:p.unsure}:{...x,img:p&&p.img} })); return bulkSet(toks,B.src+' (edited)') }
+  if(d.bkcopy!==undefined){ const s=bulkSummaryText(); (navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(()=>toast('Results copied'),()=>toast('Copy not available on this device')); return }
+  if(d.bkshare!==undefined){ const s=bulkSummaryText();
+    if(navigator.share&&!IS_APK) return navigator.share({title:'Bulk HS check',text:s}).catch(()=>{});
+    const u='https://wa.me/?text='+encodeURIComponent(s); if(IS_APK&&window.Android) Android.open(u); else window.open(u,'_blank','noopener'); return }
+  if(d.bkcsv!==undefined) return bulkCsv();
+  if(d.bkopen) return bulkSubLines(d.bkopen);
+  if(d.bkweb!==undefined){ const u='https://sheranr.github.io/trade-nova/#bulk'; if(window.Android) Android.open(u); else window.open(u,'_blank','noopener'); return }
+});
+if(location.hash==='#bulk') S.tab='bulk';
 
 boot();
 </script>

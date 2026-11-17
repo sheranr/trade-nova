@@ -26,15 +26,19 @@ ap.add_argument('--version', required=True)
 ap.add_argument('--notes', default='')
 ap.add_argument('--key', default=os.environ.get('TN_OTA_KEY', ''))
 ap.add_argument('--min-native', type=int)
+ap.add_argument('--web-only', action='store_true', help='update the web app (index.html, sw.js) only; installed Android apps are not offered this version')
 ap.add_argument('--apk'); ap.add_argument('--apk-code', type=int); ap.add_argument('--apk-version')
 a = ap.parse_args()
 if not re.fullmatch(r'\d+\.\d+\.\d+', a.version): raise SystemExit('version must look like 2.0.1')
-if not a.key or not os.path.exists(a.key): raise SystemExit('give --key (the private OTA signing key, kept outside the repo)')
+if not a.web_only and (not a.key or not os.path.exists(a.key)): raise SystemExit('give --key (the private OTA signing key, kept outside the repo)')
 
 app = open(os.path.join(ROOT, 'src', 'app.html'), encoding='utf-8').read()
 open(os.path.join(DOCS, 'index.html'), 'w', encoding='utf-8').write(app.replace('__APP_VERSION__', a.version))
 sw = open(os.path.join(ROOT, 'tools', 'sw.template.js'), encoding='utf-8').read()
 open(os.path.join(DOCS, 'sw.js'), 'w', encoding='utf-8').write(sw.replace('__APP_VERSION__', a.version))
+
+if a.web_only:
+    print('Web app', a.version, 'ready (Android OTA not changed — run again with --key to offer it to installed apps)'); raise SystemExit(0)
 
 prev = {}
 vf = os.path.join(DOCS, 'ota', 'version.json')

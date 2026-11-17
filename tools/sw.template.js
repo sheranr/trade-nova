@@ -17,6 +17,8 @@ self.addEventListener('fetch',e=>{
       const t=setTimeout(fall,4000);
       fetch(e.request.mode==='navigate'?new Request('index.html',{cache:'no-cache'}):new Request(e.request,{cache:'no-cache'})).then(n=>{ clearTimeout(t); if(n.ok){ c.put(key,n.clone()); if(!done){ done=true; res(n) } } else fall() }).catch(()=>{ clearTimeout(t); fall() });
     }))); return }
+  if(u.pathname.includes('/ocr/')){                                                        // photo text reader (bulk HS check): keep after the first download
+    e.respondWith(caches.open('tn-ocr-v1').then(c=>c.match(e.request,{ignoreSearch:true}).then(r=>r||fetch(e.request).then(n=>{ if(n.ok) c.put(e.request,n.clone()); return n })))); return }
   if(u.pathname.includes('/pdf/')&&u.pathname.endsWith('.pdf')){                          // documents: cache after first view
     e.respondWith(caches.open(PDFS).then(c=>c.match(e.request).then(r=>r||fetch(e.request).then(n=>{ if(n.ok) c.put(e.request,n.clone()); return n })))); return }
   e.respondWith(caches.match(e.request,{ignoreSearch:true}).then(r=>r||fetch(e.request)));
